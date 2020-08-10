@@ -164,9 +164,11 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="err_msg.cpp" />
     <ClCompile Include="scd_pcsc.cpp" />
+    <ClCompile Include="scd_smartcardserver.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="scd_pcsc.h" />
+    <ClInclude Include="scd_smartcardserver.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
