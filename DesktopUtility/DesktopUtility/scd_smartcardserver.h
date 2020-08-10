@@ -2,6 +2,7 @@
 #define SCD_SMARTCARDSERVER_H
 
 #ifdef _WIN32
+#include <map>
 #include <string>
 #else
 #include <QObject>
@@ -34,6 +35,8 @@ class SCD_SmartCardServer : public QObject
      enum PollingMode {PM_NONE, PM_LOGIN, PM_CHECK};
 
 #ifdef _WIN32
+	 std::map<int, std::string> messages;
+	 std::map<int, std::string> commands;
 	 std::string lastCardError;
 #else
      QStringList messages;
@@ -73,6 +76,7 @@ class SCD_SmartCardServer : public QObject
      bool permanentConnection;
 
 #ifdef _WIN32
+     std::string getCardCode(SCD_PCSC::card_data *data, int *err);
 #else
      QTimer pollTimer;
 

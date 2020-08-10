@@ -7,16 +7,7 @@
 #include <sstream>
 #include <iomanip>
 
-std::string hexStr(BYTE *data, int len)
-{
-	std::stringstream ss;
-	ss << std::hex;
-
-	for (int i(0); i < len; ++i)
-		ss << std::setw(2) << std::setfill('0') << (int)data[i];
-
-	return ss.str();
-}
+std::string hexStr(BYTE *data, int len);
 
 int main()
 {

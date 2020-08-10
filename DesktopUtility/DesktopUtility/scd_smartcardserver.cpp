@@ -1,3 +1,8 @@
+#ifdef _WIN32
+#include <sstream>
+#include <iomanip>
+#endif
+
 #include "scd_smartcardserver.h"
 
 /**
@@ -476,6 +481,8 @@ void SCD_SmartCardServer::onPolling()
       break;
    }
 }
+#endif
+
 
 /**
  * @brief SCD_SmartCardServer::getCardCode
@@ -483,6 +490,36 @@ void SCD_SmartCardServer::onPolling()
  * @param err
  * @return
  */
+#ifdef _WIN32
+std::string hexStr(BYTE *data, int len)
+{
+	std::stringstream ss;
+	ss << std::hex;
+
+	for (int i(0); i < len; ++i)
+		ss << std::setw(2) << std::setfill('0') << (int)data[i];
+
+	return ss.str();
+}
+
+std::string SCD_SmartCardServer::getCardCode(SCD_PCSC::card_data *data, int *err)
+{
+	std::string cdata;
+
+	*err = data->error;
+
+	if (data->error)
+	{
+		cdata = data->errmsg;
+
+		return cdata;
+	}
+
+	cdata = hexStr(data->data, data->datalen);
+
+	return cdata;
+}
+#else
 QByteArray SCD_SmartCardServer::getCardCode(SCD_PCSC::card_data *data, int *err)
 {
    QByteArray cdata;
