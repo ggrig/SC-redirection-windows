@@ -7,37 +7,25 @@
 #include <sstream>
 #include <iomanip>
 
-std::string hexStr(BYTE *data, int len);
+#include "scd_smartcardserver.h"
 
 int main()
 {
+	SCD_SmartCardServer server;
 
-	SCD_PCSC cardReader;
-	SCD_PCSC::card_data data;
+	server.data = server.cardReader.CheckCard();
 
-	data = cardReader.CheckCard();
-
-	if (data.atrvalid)           // if readed ATR code is valid
+	if (server.data.atrvalid)           // if readed ATR code is valid
 	{
-		//code = getCardCode(&data, &err);
+		int err;
 
-		//qDebug() << "Login: " << code << "\n";
-
-		//socket->sendTextMessage(msg[0] + "|atr:" + code); // send ATR to client
-
-		std::string code = hexStr(data.data, data.datalen);
+		std::string code = server.getCardCode(&server.data, &err);//hexStr(server.data.data, server.data.datalen);
 
 		printf("ATR %s\n", code.c_str());
 	}
 	else
 	{
-		//qDebug() << data.errmsg << "\n";
-
-		//emit error(msg[0], data.errmsg);
-
-		//socket->sendTextMessage(msg[0] + "|" + data.errmsg);
-
-		printf("Error %s\n", data.errmsg);
+		printf("Error %s\n", server.data.errmsg);
 	}
 
 }

@@ -51,6 +51,8 @@ class SCD_SmartCardServer : public QObject
      ServerType type;
 
 #ifdef _WIN32
+public:
+
 #else
      QWebSocketServer *cardServer;
      QWebSocket *socket;
