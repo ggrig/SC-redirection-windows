@@ -4,20 +4,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 #include <string.h>
 
+#ifdef _WIN32
 #include <windows.h>
+#else
+#include <wintypes.h>
+#endif
 #include <winscard.h>
 
-//#include MainWindow.h
-//#include ReadCard.h
-//#include Config.h
-
-
+#ifdef _WIN32
 #define MAX_ATR_SIZE 33
 #define MAX_READERNAME 128
 
 #define bzero(b,len) (memset((b), '\0', (len)), (void) 0)
+#endif
 
 class SCD_PCSC
 {

@@ -2,19 +2,51 @@
 //
 
 #include <iostream>
+#include <scd_pcsc.h>
+
+#include <sstream>
+#include <iomanip>
+
+std::string hexStr(BYTE *data, int len)
+{
+	std::stringstream ss;
+	ss << std::hex;
+
+	for (int i(0); i < len; ++i)
+		ss << std::setw(2) << std::setfill('0') << (int)data[i];
+
+	return ss.str();
+}
 
 int main()
 {
-    std::cout << "Hello World!\n";
+
+	SCD_PCSC cardReader;
+	SCD_PCSC::card_data data;
+
+	data = cardReader.CheckCard();
+
+	if (data.atrvalid)           // if readed ATR code is valid
+	{
+		//code = getCardCode(&data, &err);
+
+		//qDebug() << "Login: " << code << "\n";
+
+		//socket->sendTextMessage(msg[0] + "|atr:" + code); // send ATR to client
+
+		std::string code = hexStr(data.data, data.datalen);
+
+		printf("ATR %s\n", code.c_str());
+	}
+	else
+	{
+		//qDebug() << data.errmsg << "\n";
+
+		//emit error(msg[0], data.errmsg);
+
+		//socket->sendTextMessage(msg[0] + "|" + data.errmsg);
+
+		printf("Error %s\n", data.errmsg);
+	}
+
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
