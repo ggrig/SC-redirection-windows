@@ -49,7 +49,7 @@ class SCD_SmartCardServer : public QObject
 
 #ifdef _WIN32
 #else
-	 QWebSocketServer *cardServer;
+     QWebSocketServer *cardServer;
      QWebSocket *socket;
 #endif
 
@@ -62,7 +62,7 @@ class SCD_SmartCardServer : public QObject
 
 	 int16_t port;
 #else
-	 QString lastError;
+     QString lastError;
      QString atr = "";
 
      qint16 port;
@@ -74,7 +74,7 @@ class SCD_SmartCardServer : public QObject
 
 #ifdef _WIN32
 #else
-	 QTimer pollTimer;
+     QTimer pollTimer;
 
      QByteArray getCardCode(SCD_PCSC::card_data *data, int *err);
 #endif

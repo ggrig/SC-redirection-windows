@@ -6,7 +6,8 @@
  * @param parent
  */
 
-#ifndef _WIN32
+#ifdef _WIN32
+#else
 SCD_SmartCardServer::SCD_SmartCardServer(qint16 port, ServerType type, QObject *parent) : QObject(parent), type(type), port(port)
 {
    messages.insert(SM_AUTHENTICATED   , "Authenticated");
@@ -39,7 +40,8 @@ SCD_SmartCardServer::SCD_SmartCardServer(qint16 port, ServerType type, QObject *
  */
 int SCD_SmartCardServer::start()
 {
-#ifndef _WIN32
+#ifdef _WIN32
+#else
    cardServer = new QWebSocketServer("ATR",QWebSocketServer::NonSecureMode,NULL);
 
    connect(cardServer, SIGNAL(newConnection()), this, SLOT(onConnect()));
@@ -69,7 +71,8 @@ int SCD_SmartCardServer::start()
  */
 void SCD_SmartCardServer::stop()
 {
-#ifndef _WIN32
+#ifdef _WIN32
+#else
 	cardServer->close();
 #endif
 }
@@ -77,7 +80,8 @@ void SCD_SmartCardServer::stop()
 /**
  * @brief SCD_SmartCardServer::onConnect
  */
-#ifndef _WIN32
+#ifdef _WIN32
+#else
 void SCD_SmartCardServer::onConnect()
 {
    socket = cardServer->nextPendingConnection(); // get the new connection
