@@ -18,12 +18,21 @@
     <ClInclude Include="WebsocketServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="scd_pcsc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="server.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WebsocketServer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scd_pcsc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="err_msg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
