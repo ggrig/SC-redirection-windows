@@ -75,14 +75,12 @@ class WebsocketServer
 
 		//void stopPolling();
 
-		//void messageParse(QWebSocket *socket, const QString &message);
+		void messageParse(ClientConnection conn, string message);
 
 public:
 
-	//explicit SCD_SmartCardServer(int16_t port = 10522, ServerType type = ST_STANDALONE, void *parent = nullptr);
-
-	int  start();
-	void stop();
+	//int  start();
+	//void stop();
 
 #ifdef _WIN32
 #else
