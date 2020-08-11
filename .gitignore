@@ -2,3 +2,8 @@ DesktopUtility/.vs
 DesktopUtility/DesktopUtility/DesktopUtility.vcxproj.user
 DesktopUtility/DesktopUtility/x64/
 DesktopUtility/x64/
+
+websocket-server-demo/.vs/
+websocket-server-demo/lib_json/x64/
+websocket-server-demo/server/x64/
+websocket-server-demo/x64/
