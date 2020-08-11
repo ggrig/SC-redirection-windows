@@ -12,6 +12,30 @@
  */
 
 #ifdef _WIN32
+SCD_SmartCardServer::SCD_SmartCardServer(int16_t port, ServerType type, void *parent) : QObject(parent), type(type), port(port)
+{
+	messages.insert(std::pair<int,std::string>(SM_AUTHENTICATED, "Authenticated"));
+	messages.insert(std::pair<int, std::string>(SM_NOTAUTHENTICATED, "NotAuthenticated"));
+	messages.insert(std::pair<int, std::string>(SM_VALIDATED, "Validated"));
+	messages.insert(std::pair<int, std::string>(SM_NOTVALIDATED, "NotValidated"));
+	messages.insert(std::pair<int, std::string>(SM_ALREADYAUTH, "AlreadyAuthenticated"));
+	messages.insert(std::pair<int, std::string>(SM_SESSIONTIMEOUT, "SessionExpired"));
+	messages.insert(std::pair<int, std::string>(SM_UNKNOWNCOMMAND, "UnknownCommand"));
+	messages.insert(std::pair<int, std::string>(SM_INTEGRATED, "Integrated"));
+	messages.insert(std::pair<int, std::string>(SM_STANDALONE, "Standalone"));
+	messages.insert(std::pair<int, std::string>(SM_UNKNOWN, "Unknown"));
+
+	commands.insert(std::pair<int, std::string>(C_SERVERTYPE, "SERVERTYPE"));
+	commands.insert(std::pair<int, std::string>(C_ATR, "ATRCODE"));
+	commands.insert(std::pair<int, std::string>(C_LOGIN, "LOGINCODE"));
+	commands.insert(std::pair<int, std::string>(C_CHECK, "CHECKCODE"));
+	commands.insert(std::pair<int, std::string>(C_AUTH, "AUTHCODE"));
+	commands.insert(std::pair<int, std::string>(C_TIMEOUT, "POLLTIMEOUT"));
+
+	//connect(&pollTimer, SIGNAL(timeout()), this, SLOT(onPolling()));
+
+	//pollTimer.setInterval(1500);
+}
 #else
 SCD_SmartCardServer::SCD_SmartCardServer(qint16 port, ServerType type, QObject *parent) : QObject(parent), type(type), port(port)
 {

@@ -16,6 +16,7 @@
 #ifdef _WIN32
 class SCD_SmartCardServer
 {
+	void * QObject;
 #else
 class SCD_SmartCardServer : public QObject
 {
@@ -101,6 +102,7 @@ public:
    public:
 
 #ifdef _WIN32
+	   explicit SCD_SmartCardServer(int16_t port=10522, ServerType type=ST_STANDALONE , void *parent = nullptr);
 #else
 	   explicit SCD_SmartCardServer(qint16 port=10522, ServerType type=ST_STANDALONE , QObject *parent = nullptr);
 #endif
