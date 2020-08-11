@@ -4,9 +4,6 @@
 #include <thread>
 #include <asio/io_service.hpp>
 
-//The port number the WebSocket server listens on
-#define PORT_NUMBER 8080
-
 int main(int argc, char* argv[])
 {
 	//Create the event loop for the main thread, and the WebSocket server
@@ -50,7 +47,7 @@ int main(int argc, char* argv[])
 	
 	//Start the networking thread
 	std::thread serverThread([&server]() {
-		server.run(PORT_NUMBER);
+		server.run();
 	});
 	
 	//Start a keyboard input thread that reads from stdin

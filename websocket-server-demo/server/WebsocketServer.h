@@ -8,6 +8,8 @@
 #include <websocketpp/server.hpp>
 #include <json/json.h>
 
+#include <scd_pcsc.h>
+
 #include <functional>
 #include <string>
 #include <vector>
@@ -20,12 +22,91 @@ using std::map;
 typedef websocketpp::server<websocketpp::config::asio> WebsocketEndpoint;
 typedef websocketpp::connection_hdl ClientConnection;
 
+//The port number the WebSocket server listens on
+#define PORT_NUMBER 8080
+
 class WebsocketServer
 {
+	private:
+
+		enum ServerType { ST_UNKNOWN, ST_STANDALONE, ST_INTEGRATED };
+
+		enum StatusMess {
+			SM_AUTHENTICATED, SM_NOTAUTHENTICATED, SM_VALIDATED,
+			SM_NOTVALIDATED, SM_ALREADYAUTH, SM_SESSIONTIMEOUT,
+			SM_UNKNOWNCOMMAND, SM_INTEGRATED, SM_STANDALONE,
+			SM_UNKNOWN, SM_ERROR
+		};
+
+		enum Commands { C_SERVERTYPE, C_ATR, C_LOGIN, C_CHECK, C_AUTH, C_TIMEOUT };
+
+		enum PollingMode { PM_NONE, PM_LOGIN, PM_CHECK };
+
+		map<int, string> messages;
+		map<int, string> commands;
+		string lastCardError;
+
+		StatusMess  lastPollStatus = SM_UNKNOWN;
+		PollingMode pollMode = PM_NONE;
+		PollingMode currentPollMode;
+
+		ServerType type;
+
+		SCD_PCSC cardReader;
+		SCD_PCSC::card_data data;
+
+		string lastError;
+		string atr = "";
+
+		int16_t port;
+
+		int timer = 0;
+		int isAuthenticated = 0;
+
+		bool permanentConnection;
+
+		string getCardCode(SCD_PCSC::card_data *data, int *err);
+
+		void resetAuthentication();
+
+		//void startPolling(PollingMode mode);
+
+		//void restartPolling();
+
+		//void stopPolling();
+
+		//void messageParse(QWebSocket *socket, const QString &message);
+
+public:
+
+	//explicit SCD_SmartCardServer(int16_t port = 10522, ServerType type = ST_STANDALONE, void *parent = nullptr);
+
+	int  start();
+	void stop();
+
+#ifdef _WIN32
+#else
+signals:
+
+	void status(QString command, StatusMess status, bool logout);
+	void error(QString command, QString error);
+	void serverType(ServerType type);
+	void loginCode(QByteArray ATR);
+
+private slots:
+
+	void onConnect();
+
+	void onCheckCardMessageReceived(const QString &message);
+
+	void onPolling();
+#endif
+
+
 	public:
 		
-		WebsocketServer();
-		void run(int port);
+		WebsocketServer(int16_t port = PORT_NUMBER, ServerType type = ST_STANDALONE);
+		void run();
 		
 		//Returns the number of currently connected clients
 		size_t numConnections();

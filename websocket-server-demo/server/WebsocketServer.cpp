@@ -29,7 +29,7 @@ string WebsocketServer::stringifyJson(const Json::Value& val)
 	return Json::writeString(wbuilder, val);
 }
 
-WebsocketServer::WebsocketServer()
+WebsocketServer::WebsocketServer(int16_t port, ServerType type) : type(type), port(port)
 {
 	//Wire up our event handlers
 	this->endpoint.set_open_handler(std::bind(&WebsocketServer::onOpen, this, std::placeholders::_1));
@@ -40,7 +40,7 @@ WebsocketServer::WebsocketServer()
 	this->endpoint.init_asio(&(this->eventLoop));
 }
 
-void WebsocketServer::run(int port)
+void WebsocketServer::run()
 {
 	//Listen on the specified port number and start accepting connections
 	this->endpoint.listen(port);
@@ -148,4 +148,42 @@ void WebsocketServer::onMessage(ClientConnection conn, WebsocketEndpoint::messag
 			}
 		}
 	}
+}
+
+std::string hexStr(BYTE *data, int len)
+{
+	std::stringstream ss;
+	ss << std::hex;
+
+	for (int i(0); i < len; ++i)
+		ss << std::setw(2) << std::setfill('0') << (int)data[i];
+
+	return ss.str();
+}
+
+std::string WebsocketServer::getCardCode(SCD_PCSC::card_data *data, int *err)
+{
+	std::string cdata;
+
+	*err = data->error;
+
+	if (data->error)
+	{
+		cdata = data->errmsg;
+
+		return cdata;
+	}
+
+	cdata = hexStr(data->data, data->datalen);
+
+	return cdata;
+}
+
+/**
+ * @brief WebsocketServer::resetAuthentication
+ */
+void WebsocketServer::resetAuthentication()
+{
+	isAuthenticated = 0;
+	atr = "";
 }
