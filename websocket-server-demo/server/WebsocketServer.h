@@ -15,6 +15,7 @@
 #include <vector>
 #include <mutex>
 #include <map>
+
 using std::string;
 using std::vector;
 using std::map;
@@ -27,55 +28,55 @@ typedef websocketpp::connection_hdl ClientConnection;
 
 class WebsocketServer
 {
-	private:
+private:
 
-		enum ServerType { ST_UNKNOWN, ST_STANDALONE, ST_INTEGRATED };
+	enum ServerType { ST_UNKNOWN, ST_STANDALONE, ST_INTEGRATED };
 
-		enum StatusMess {
-			SM_AUTHENTICATED, SM_NOTAUTHENTICATED, SM_VALIDATED,
-			SM_NOTVALIDATED, SM_ALREADYAUTH, SM_SESSIONTIMEOUT,
-			SM_UNKNOWNCOMMAND, SM_INTEGRATED, SM_STANDALONE,
-			SM_UNKNOWN, SM_ERROR
-		};
+	enum StatusMess {
+		SM_AUTHENTICATED, SM_NOTAUTHENTICATED, SM_VALIDATED,
+		SM_NOTVALIDATED, SM_ALREADYAUTH, SM_SESSIONTIMEOUT,
+		SM_UNKNOWNCOMMAND, SM_INTEGRATED, SM_STANDALONE,
+		SM_UNKNOWN, SM_ERROR
+	};
 
-		enum Commands { C_SERVERTYPE, C_ATR, C_LOGIN, C_CHECK, C_AUTH, C_TIMEOUT };
+	enum Commands { C_SERVERTYPE, C_ATR, C_LOGIN, C_CHECK, C_AUTH, C_TIMEOUT };
 
-		enum PollingMode { PM_NONE, PM_LOGIN, PM_CHECK };
+	enum PollingMode { PM_NONE, PM_LOGIN, PM_CHECK };
 
-		map<int, string> messages;
-		map<int, string> commands;
-		string lastCardError;
+	map<int, string> messages;
+	map<int, string> commands;
+	string lastCardError;
 
-		StatusMess  lastPollStatus = SM_UNKNOWN;
-		PollingMode pollMode = PM_NONE;
-		PollingMode currentPollMode;
+	StatusMess  lastPollStatus = SM_UNKNOWN;
+	PollingMode pollMode = PM_NONE;
+	PollingMode currentPollMode;
 
-		ServerType type;
+	ServerType type;
 
-		SCD_PCSC cardReader;
-		SCD_PCSC::card_data data;
+	SCD_PCSC cardReader;
+	SCD_PCSC::card_data data;
 
-		string lastError;
-		string atr = "";
+	string lastError;
+	string atr = "";
 
-		int16_t port;
+	int16_t port;
 
-		int timer = 0;
-		int isAuthenticated = 0;
+	int timer = 0;
+	int isAuthenticated = 0;
 
-		bool permanentConnection;
+	bool permanentConnection;
 
-		string getCardCode(SCD_PCSC::card_data *data, int *err);
+	string getCardCode(SCD_PCSC::card_data *data, int *err);
 
-		void resetAuthentication();
+	void resetAuthentication();
 
-		//void startPolling(PollingMode mode);
+	//void startPolling(PollingMode mode);
 
-		//void restartPolling();
+	//void restartPolling();
 
-		//void stopPolling();
+	//void stopPolling();
 
-		void messageParse(ClientConnection conn, string message);
+	boolean messageParse(ClientConnection conn, string message);
 
 public:
 

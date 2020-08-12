@@ -149,7 +149,10 @@ void WebsocketServer::onClose(ClientConnection conn)
 
 void WebsocketServer::onMessage(ClientConnection conn, WebsocketEndpoint::message_ptr msg)
 {
-	messageParse(conn, msg->get_payload());
+	if (messageParse(conn, msg->get_payload()))
+	{
+		return;
+	}
 
 	//Validate that the incoming message contains valid JSON
 	Json::Value messageObject = WebsocketServer::parseJson(msg->get_payload());
@@ -209,33 +212,56 @@ void WebsocketServer::resetAuthentication()
 	atr = "";
 }
 
+void split(const string& s, char c,
+	vector<string>& v) {
+	string::size_type i = 0;
+	string::size_type j = s.find(c);
+
+	while (j != string::npos) {
+		v.push_back(s.substr(i, j - i));
+		i = ++j;
+		j = s.find(c, j);
+
+		if (j == string::npos)
+			v.push_back(s.substr(i, s.length()));
+	}
+}
+
+
 /**
  * @brief WebsocketServer::messageParse
- * @param socket
+ * @param conn
  * @param message
  */
-void WebsocketServer::messageParse(ClientConnection conn, string message)
+boolean WebsocketServer::messageParse(ClientConnection conn, string message)
 {
-/*
-	QByteArray code;
 
+	string code;
 	int err;
 
-	qDebug() << "Message Received: " << message << "\n";
+	// convert string to upper case
+	std::for_each(message.begin(), message.end(), [](char & c) {
+		c = ::toupper(c);
+	});
 
-	QStringList msg = message.toUpper().split(":");
+	std::clog << "Message Received: " << message << "\n";
 
-	if (msg.count() != 2)
+	vector<string> msg;
+
+	split(message, ':', msg);
+
+
+	if (msg.size() != 2)
 	{
-		qDebug() << messages.at(SM_UNKNOWNCOMMAND) << "\n";
+		std::clog << messages.at(SM_UNKNOWNCOMMAND) << "\n";
 
-		emit error(msg[0], messages.at(SM_UNKNOWNCOMMAND));
+		//emit error(msg[0], messages.at(SM_UNKNOWNCOMMAND));
 
-		socket->close(); // close suspect connection
+		//socket->close(); // close suspect connection
 
-		return;
+		return false;
 	}
-
+/*
 	// Require to change polling tmeout interval -------------------------------------------
 
 	if (msg[0] == commands.at(C_TIMEOUT))
@@ -269,20 +295,20 @@ void WebsocketServer::messageParse(ClientConnection conn, string message)
 
 		if (type == ST_STANDALONE)
 		{
-			qDebug() << messages.at(SM_STANDALONE) << "\n";
+			std::clog << messages.at(SM_STANDALONE) << "\n";
 
 			socket->sendTextMessage(msg[0] + "|" + messages.at(SM_STANDALONE));  // send server type to client
 		}
 		else
 			if (type == ST_INTEGRATED)
 			{
-				qDebug() << messages.at(SM_INTEGRATED) << "\n";
+				std::clog << messages.at(SM_INTEGRATED) << "\n";
 
 				socket->sendTextMessage(msg[0] + "|" + messages.at(SM_INTEGRATED)); // send server type to client
 			}
 			else
 			{
-				qDebug() << messages.at(SM_UNKNOWN) << "\n";
+				std::clog << messages.at(SM_UNKNOWN) << "\n";
 
 				socket->sendTextMessage(msg[0] + "|ERROR:" + messages.at(SM_UNKNOWN));
 			}
@@ -291,14 +317,14 @@ void WebsocketServer::messageParse(ClientConnection conn, string message)
 
 		return;
 	}
-
+*/
 	// Read the ATR code (for diagnostic use, or code detection)
 
 	if (msg[0] == commands.at(C_ATR))
 	{
 		//stopPolling();
 
-		pollTimer.stop();
+		//pollTimer.stop();
 
 		data = cardReader.CheckCard();
 
@@ -306,26 +332,26 @@ void WebsocketServer::messageParse(ClientConnection conn, string message)
 		{
 			code = getCardCode(&data, &err);
 
-			qDebug() << "Login: " << code << "\n";
+			std::clog << "Login: " << code << "\n";
 
-			socket->sendTextMessage(msg[0] + "|atr:" + code); // send ATR to client
+			sendMessage(conn, msg[0] + "|ATR:" + code.c_str(), Json::Value());
 		}
 		else
 		{
-			qDebug() << data.errmsg << "\n";
+			std::clog << data.errmsg << "\n";
 
-			emit error(msg[0], data.errmsg);
+			//emit error(msg[0], data.errmsg);
 
-			socket->sendTextMessage(msg[0] + "|" + data.errmsg);
+			sendMessage(conn, msg[0] + "|" + data.errmsg, Json::Value());
 		}
 
-		restartPolling();
+		//restartPolling();
 
-		return;
+		return true;
 	}
 
 	// Require ATR authentication code -----------------------------------------------------
-
+/*
 	if (msg[0] == commands.at(C_LOGIN))
 	{
 		pollTimer.stop();
@@ -340,7 +366,7 @@ void WebsocketServer::messageParse(ClientConnection conn, string message)
 		{
 			code = getCardCode(&data, &err);
 
-			qDebug() << "Login: " << code << "\n";
+			std::clog << "Login: " << code << "\n";
 
 			emit loginCode(code);
 
@@ -355,7 +381,7 @@ void WebsocketServer::messageParse(ClientConnection conn, string message)
 		}
 		else
 		{
-			qDebug() << data.errmsg << "\n";
+			std::clog << data.errmsg << "\n";
 
 			emit error(msg[0], data.errmsg);
 
@@ -392,7 +418,7 @@ void WebsocketServer::messageParse(ClientConnection conn, string message)
 
 				if (atr == code)    // if readed ATR match authenticated ATR
 				{
-					qDebug() << "Check success => Card code: " << code << " => " << atr << "\n";
+					std::clog << "Check success => Card code: " << code << " => " << atr << "\n";
 
 					emit status(msg[0], SM_VALIDATED, false);
 
@@ -406,7 +432,7 @@ void WebsocketServer::messageParse(ClientConnection conn, string message)
 				}
 				else // validation failure
 				{
-					qDebug() << "Check failure => Card code: " << code << " => " << atr << "\n";
+					std::clog << "Check failure => Card code: " << code << " => " << atr << "\n";
 
 					resetAuthentication(); // unvalidate authentication
 
@@ -432,7 +458,7 @@ void WebsocketServer::messageParse(ClientConnection conn, string message)
 
 					resetAuthentication(); // unvalidate authentication
 
-					qDebug() << messages.at(SM_SESSIONTIMEOUT) << "\n";
+					std::clog << messages.at(SM_SESSIONTIMEOUT) << "\n";
 
 					emit status(msg[0], SM_SESSIONTIMEOUT, true);
 
@@ -446,7 +472,7 @@ void WebsocketServer::messageParse(ClientConnection conn, string message)
 				}
 				else
 				{
-					qDebug() << "Check error" << data.errmsg << "\n";
+					std::clog << "Check error" << data.errmsg << "\n";
 
 					QString errMsg = QString(data.errmsg) + " (" + QString::number(timer) + ")";
 
@@ -467,7 +493,7 @@ void WebsocketServer::messageParse(ClientConnection conn, string message)
 			// becose the auhentication do not change if it do not to try to authenticate again.
 			// the client must be send a LOGINCODE command.
 
-			qDebug() << messages.at(SM_NOTAUTHENTICATED) << "\n";
+			std::clog << messages.at(SM_NOTAUTHENTICATED) << "\n";
 
 			emit status(msg[0], SM_NOTAUTHENTICATED, true);
 
@@ -491,7 +517,7 @@ void WebsocketServer::messageParse(ClientConnection conn, string message)
 
 		if (isAuthenticated)
 		{
-			qDebug() << messages.at(SM_ALREADYAUTH) << "\n";
+			std::clog << messages.at(SM_ALREADYAUTH) << "\n";
 
 			emit status(msg[0], SM_ALREADYAUTH, false);
 
@@ -511,7 +537,7 @@ void WebsocketServer::messageParse(ClientConnection conn, string message)
 
 					isAuthenticated = 1;
 
-					qDebug() << messages.at(SM_AUTHENTICATED) << "\n";
+					std::clog << messages.at(SM_AUTHENTICATED) << "\n";
 
 					emit status(msg[0], SM_AUTHENTICATED, false);
 
@@ -521,7 +547,7 @@ void WebsocketServer::messageParse(ClientConnection conn, string message)
 				{
 					resetAuthentication();
 
-					qDebug() << messages.at(SM_NOTAUTHENTICATED) << "\n";
+					std::clog << messages.at(SM_NOTAUTHENTICATED) << "\n";
 
 					emit status(msg[0], SM_NOTAUTHENTICATED, true);
 
@@ -530,7 +556,7 @@ void WebsocketServer::messageParse(ClientConnection conn, string message)
 			}
 			else // on reading card error
 			{
-				qDebug() << data.errmsg << "\n";
+				std::clog << data.errmsg << "\n";
 
 				emit error(msg[0], data.errmsg);
 
@@ -542,11 +568,13 @@ void WebsocketServer::messageParse(ClientConnection conn, string message)
 
 		return;
 	}
-
-	qDebug() << messages.at(SM_UNKNOWNCOMMAND) << "\n";
-
+*/
+	std::clog << messages.at(SM_UNKNOWNCOMMAND) << "\n";
+/*
 	emit error(msg[0], messages.at(SM_UNKNOWNCOMMAND));
 
 	socket->close(); // close suspect connection
 */
+
+	return false;
 }
