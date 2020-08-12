@@ -180,7 +180,7 @@
     {
        setData(" Opened");
 
-       append("Connection opened");
+       append("Local Connection Opened");
           
        append("Get login code..."); 
 
@@ -191,7 +191,7 @@
     {
        setData("Closed");
        
-       append("Connection closed");  
+       append("Local Connection Closed");
     };
     
     client.error = function(e)
@@ -200,7 +200,7 @@
        
        if (!e.message) 
        {
-         message = "Open connection failure";  
+         message = "Open Local Connection Failure";
        }    
        else
        {
