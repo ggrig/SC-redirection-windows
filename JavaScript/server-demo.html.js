@@ -94,8 +94,8 @@
   
   function connect(atr)
   {  
-    //client = new SCD_SmcAuthClient('sc_server.com',10522);
     client = new SCD_SmcAuthClient('localhost',8080);
+    remote = new SCD_SmcAuthClient('sc_server.com',10522);
     
     client.onSmcError = function(e)
     {
@@ -103,6 +103,8 @@
        
        append("Command: " + e.detail.command + " => error: " + e.detail.error);
        
+       remote.sendCommand(e.detail.error);
+
        if (e.detail.command==="LOGINCODE")
        {
           var id = document.getElementById("atr");
@@ -113,12 +115,14 @@
           } 
        }    
     };
-        
+
     client.onGetATR = function(e)
     {
        clear(maxEle);  
        
        append("Command: " + e.detail.command + " => Atr: " + e.detail.atr);
+
+       remote.sendCommand("ATRCODE:" + e.detail.atr);
        
        if (e.detail.command==="LOGINCODE")
        {
@@ -207,6 +211,60 @@
        
        append("Web socket error: " + message);  
     };
+
+    remote.onSmcError = function(e)
+    {
+       clear(maxEle);
+
+       append("Command: " + e.detail.command + " => error: " + e.detail.error);
+
+       if (e.detail.command==="LOGINCODE")
+       {
+          var id = document.getElementById("atr");
+
+          if (id)
+          {
+            id.innerText = '';
+          }
+       }
+    };
+
+    remote.opened = function(e)
+    {
+       setData(" Opened");
+
+       append("Remote Connection Opened");
+
+       append("Get login code...");
+
+       remote.getLoginCode();
+    };
+
+    remote.closed = function(e)
+    {
+       setData("Closed");
+
+       append("Remote Connection Closed");
+    };
+
+    remote.error = function(e)
+    {
+       let message;
+
+       if (!e.message)
+       {
+         message = "Open Remote Connection Failure";
+       }
+       else
+       {
+         message = e.message;
+       }
+
+       setError(message);
+
+       append("Web socket error: " + message);
+    };
       
     client.open();
+	remote.open();
   }   
