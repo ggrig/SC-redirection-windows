@@ -24,6 +24,7 @@
                               
       this.onmessage = function(event)
       {
+         console.log("onmessage - " + event.data);
          var message = event.data.split('|');
 
          var appo = this;
