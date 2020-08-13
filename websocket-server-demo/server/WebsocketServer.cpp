@@ -235,7 +235,6 @@ void split(const string& s, char c,
  */
 boolean WebsocketServer::messageParse(ClientConnection conn, string message)
 {
-
 	string code;
 	int err;
 
@@ -255,77 +254,12 @@ boolean WebsocketServer::messageParse(ClientConnection conn, string message)
 	{
 		std::clog << messages.at(SM_UNKNOWNCOMMAND) << "\n";
 
-		//emit error(msg[0], messages.at(SM_UNKNOWNCOMMAND));
-
-		//socket->close(); // close suspect connection
-
 		return false;
 	}
-/*
-	// Require to change polling tmeout interval -------------------------------------------
 
-	if (msg[0] == commands.at(C_TIMEOUT))
-	{
-		int msec = msg[1].trimmed().toInt() * 1000;
-
-		if (msec >= 0)
-		{
-			pollTimer.stop(); // pause current polling (if any)
-
-			pollTimer.setInterval(msec);
-			socket->sendTextMessage(msg[0] + "|Timeout: " + msg[1].trimmed());  // reply to client
-
-			restartPolling();
-		}
-		else
-		{
-			socket->sendTextMessage(msg[0] + "|ERROR:invalid timeout => " + msg[1].trimmed());  // send server type to client
-		}
-
-		return;
-	}
-
-	// Require server type ------------------------------------------------------------------
-
-	if (msg[0] == commands.at(C_SERVERTYPE))
-	{
-		pollTimer.stop();
-
-		emit serverType(type);
-
-		if (type == ST_STANDALONE)
-		{
-			std::clog << messages.at(SM_STANDALONE) << "\n";
-
-			socket->sendTextMessage(msg[0] + "|" + messages.at(SM_STANDALONE));  // send server type to client
-		}
-		else
-			if (type == ST_INTEGRATED)
-			{
-				std::clog << messages.at(SM_INTEGRATED) << "\n";
-
-				socket->sendTextMessage(msg[0] + "|" + messages.at(SM_INTEGRATED)); // send server type to client
-			}
-			else
-			{
-				std::clog << messages.at(SM_UNKNOWN) << "\n";
-
-				socket->sendTextMessage(msg[0] + "|ERROR:" + messages.at(SM_UNKNOWN));
-			}
-
-		restartPolling();
-
-		return;
-	}
-*/
 	// Read the ATR code (for diagnostic use, or code detection)
-
 	if (msg[0] == commands.at(C_ATR))
 	{
-		//stopPolling();
-
-		//pollTimer.stop();
-
 		data = cardReader.CheckCard();
 
 		if (data.atrvalid)           // if readed ATR code is valid
@@ -340,241 +274,13 @@ boolean WebsocketServer::messageParse(ClientConnection conn, string message)
 		{
 			std::clog << data.errmsg << "\n";
 
-			//emit error(msg[0], data.errmsg);
-
 			sendMessage(conn, msg[0] + "|" + data.errmsg, Json::Value());
 		}
-
-		//restartPolling();
 
 		return true;
 	}
 
-	// Require ATR authentication code -----------------------------------------------------
-/*
-	if (msg[0] == commands.at(C_LOGIN))
-	{
-		pollTimer.stop();
-
-		data = cardReader.CheckCard();
-
-		resetAuthentication();  // unvalidate authentication
-
-		emit status(msg[0], SM_SESSIONTIMEOUT, true); // emit session timeout signal
-
-		if (data.atrvalid) // if readed ATR is valid
-		{
-			code = getCardCode(&data, &err);
-
-			std::clog << "Login: " << code << "\n";
-
-			emit loginCode(code);
-
-			if (lastPollStatus != SM_SESSIONTIMEOUT)
-			{
-				socket->sendTextMessage(msg[0] + "|" + messages.at(SM_SESSIONTIMEOUT)); // send login ATR to client
-				socket->sendTextMessage(msg[0] + "|" + "atr:" + code); // send login ATR to client
-			}
-
-			lastPollStatus = SM_SESSIONTIMEOUT;
-			lastError.clear();
-		}
-		else
-		{
-			std::clog << data.errmsg << "\n";
-
-			emit error(msg[0], data.errmsg);
-
-			if (lastPollStatus != SM_ERROR || (lastPollStatus == SM_ERROR && lastError != data.errmsg))
-			{
-				socket->sendTextMessage(msg[0] + "|" + messages.at(SM_SESSIONTIMEOUT)); // send login ATR to client
-				socket->sendTextMessage(msg[0] + "|" + data.errmsg);
-			}
-
-			lastPollStatus = SM_ERROR;
-			lastError = data.errmsg;
-		}
-
-		startPolling(PM_LOGIN);
-
-		return;
-	}
-
-	// Authentication check ----------------------------------------------------------------
-
-	if (msg[0] == commands.at(C_CHECK))
-	{
-		pollTimer.stop();
-
-		if (isAuthenticated)
-		{
-			data = cardReader.CheckCard();
-
-			code = getCardCode(&data, &err); // Get Hex ATR code
-
-			if (data.atrvalid)   // if readed ATR is valid
-			{
-				timer = 0;
-
-				if (atr == code)    // if readed ATR match authenticated ATR
-				{
-					std::clog << "Check success => Card code: " << code << " => " << atr << "\n";
-
-					emit status(msg[0], SM_VALIDATED, false);
-
-					if (lastPollStatus != SM_VALIDATED)
-					{
-						socket->sendTextMessage(msg[0] + "|" + messages.at(SM_VALIDATED));
-					}
-
-					lastPollStatus = SM_VALIDATED;
-					lastError.clear();
-				}
-				else // validation failure
-				{
-					std::clog << "Check failure => Card code: " << code << " => " << atr << "\n";
-
-					resetAuthentication(); // unvalidate authentication
-
-					emit status(msg[0], SM_NOTVALIDATED, true);
-
-					if (lastPollStatus != SM_NOTVALIDATED)
-					{
-						socket->sendTextMessage(msg[0] + "|" + messages.at(SM_NOTVALIDATED));
-						socket->sendTextMessage(msg[0] + "|" + messages.at(SM_SESSIONTIMEOUT));
-					}
-
-					lastPollStatus = SM_NOTVALIDATED;
-					lastError.clear();
-				}
-			}
-			else  // on reading card error
-			{
-				timer++;
-
-				if (timer > 3) // wait tree times
-				{
-					timer = 0;
-
-					resetAuthentication(); // unvalidate authentication
-
-					std::clog << messages.at(SM_SESSIONTIMEOUT) << "\n";
-
-					emit status(msg[0], SM_SESSIONTIMEOUT, true);
-
-					if (lastError != SM_SESSIONTIMEOUT)
-					{
-						socket->sendTextMessage(msg[0] + "|" + messages.at(SM_SESSIONTIMEOUT));
-					}
-
-					lastPollStatus = SM_SESSIONTIMEOUT;
-					lastError.clear();;
-				}
-				else
-				{
-					std::clog << "Check error" << data.errmsg << "\n";
-
-					QString errMsg = QString(data.errmsg) + " (" + QString::number(timer) + ")";
-
-					emit error(msg[0], errMsg);
-
-					//socket->sendTextMessage(msg[0] + "|" + errMsg);
-
-					lastPollStatus = SM_ERROR;
-					lastError = data.errmsg;
-				}
-			}
-
-			startPolling(PM_CHECK);
-		}
-		else
-		{
-			// if it is not authenticated, do not start again the polling,
-			// becose the auhentication do not change if it do not to try to authenticate again.
-			// the client must be send a LOGINCODE command.
-
-			std::clog << messages.at(SM_NOTAUTHENTICATED) << "\n";
-
-			emit status(msg[0], SM_NOTAUTHENTICATED, true);
-
-			if (lastPollStatus != SM_NOTAUTHENTICATED)
-			{
-				socket->sendTextMessage(msg[0] + "|" + messages.at(SM_NOTAUTHENTICATED));
-			}
-
-			lastPollStatus = SM_NOTAUTHENTICATED;
-			lastError.clear();
-		}
-
-		return;
-	}
-
-	// Require to authenticate ATR code --------------------------------------------------
-
-	if (msg[0] == commands.at(C_AUTH))
-	{
-		stopPolling();
-
-		if (isAuthenticated)
-		{
-			std::clog << messages.at(SM_ALREADYAUTH) << "\n";
-
-			emit status(msg[0], SM_ALREADYAUTH, false);
-
-			socket->sendTextMessage(msg[0] + "|" + messages.at(SM_ALREADYAUTH));
-		}
-		else  // try to authenticate
-		{
-			data = cardReader.CheckCard();
-
-			code = getCardCode(&data, &err);
-
-			if (data.atrvalid)   // reading ATR code success
-			{
-				if (msg[1] == code) // authentication success
-				{
-					atr = code;
-
-					isAuthenticated = 1;
-
-					std::clog << messages.at(SM_AUTHENTICATED) << "\n";
-
-					emit status(msg[0], SM_AUTHENTICATED, false);
-
-					socket->sendTextMessage(msg[0] + "|" + messages.at(SM_AUTHENTICATED));
-				}
-				else
-				{
-					resetAuthentication();
-
-					std::clog << messages.at(SM_NOTAUTHENTICATED) << "\n";
-
-					emit status(msg[0], SM_NOTAUTHENTICATED, true);
-
-					socket->sendTextMessage(msg[0] + "|" + messages.at(SM_NOTAUTHENTICATED));
-				}
-			}
-			else // on reading card error
-			{
-				std::clog << data.errmsg << "\n";
-
-				emit error(msg[0], data.errmsg);
-
-				socket->sendTextMessage(msg[0] + "|" + data.errmsg);
-
-				socket->sendTextMessage(msg[0] + "|" + messages.at(SM_NOTAUTHENTICATED));
-			}
-		}
-
-		return;
-	}
-*/
 	std::clog << messages.at(SM_UNKNOWNCOMMAND) << "\n";
-/*
-	emit error(msg[0], messages.at(SM_UNKNOWNCOMMAND));
-
-	socket->close(); // close suspect connection
-*/
 
 	return false;
 }

@@ -41,15 +41,11 @@ private:
 
 	enum Commands { C_SERVERTYPE, C_ATR, C_LOGIN, C_CHECK, C_AUTH, C_TIMEOUT };
 
-	enum PollingMode { PM_NONE, PM_LOGIN, PM_CHECK };
-
 	map<int, string> messages;
 	map<int, string> commands;
 	string lastCardError;
 
 	StatusMess  lastPollStatus = SM_UNKNOWN;
-	PollingMode pollMode = PM_NONE;
-	PollingMode currentPollMode;
 
 	ServerType type;
 
@@ -70,37 +66,7 @@ private:
 
 	void resetAuthentication();
 
-	//void startPolling(PollingMode mode);
-
-	//void restartPolling();
-
-	//void stopPolling();
-
 	boolean messageParse(ClientConnection conn, string message);
-
-public:
-
-	//int  start();
-	//void stop();
-
-#ifdef _WIN32
-#else
-signals:
-
-	void status(QString command, StatusMess status, bool logout);
-	void error(QString command, QString error);
-	void serverType(ServerType type);
-	void loginCode(QByteArray ATR);
-
-private slots:
-
-	void onConnect();
-
-	void onCheckCardMessageReceived(const QString &message);
-
-	void onPolling();
-#endif
-
 
 	public:
 		
