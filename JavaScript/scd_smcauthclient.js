@@ -19,11 +19,6 @@
       this.closed = function() {};
       this.error  = function() {};
       
-      this.onAuthenticate   = function(e){};
-      this.onValidate       = function(e){};
-      this.onSessionExpired = function(e){};
-      this.onServerType     = function(e){};
-      this.onSetTimeout     = function(e){};
       this.onGetATR         = function(e){};      
       this.onSmcError       = function(e){};
                               
@@ -119,12 +114,7 @@
        this.socket.onerror   = this.error;           
        
        this.socket.addEventListener("smcerror"      , this.onSmcError);      
-       this.socket.addEventListener("getatr"        , this.onGetATR);      
-       this.socket.addEventListener("validated"     , this.onValidate);      
-       this.socket.addEventListener("authenticated" , this.onAuthenticate);      
-       this.socket.addEventListener("settimeout"    , this.onSetTimeout);      
-       this.socket.addEventListener("sessionexpired", this.onSessionExpired);      
-       this.socket.addEventListener("servertype"    , this.onServerType);      
+       this.socket.addEventListener("getatr"        , this.onGetATR);
     }
     
     sendCommand(command) 

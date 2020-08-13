@@ -134,57 +134,12 @@
           }
        }    
     };
-    
-    client.onValidate = function(e)
-    {
-       clear(maxEle); 
-        
-       append("Command: " + e.detail.command + " => Validated: " + e.detail.validated);        
-    };
-    
-    client.onAuthenticate = function(e)
-    {
-       clear(maxEle); 
-        
-       append("Command: " + e.detail.command + " => Authenticated: " + e.detail.authenticated);
-        
-       if (e.detail.authenticated)
-       {
-          client.checkAuthentication();  
-       }           
-    };
-    
-    client.onSessionExpired = function(e)
-    {
-       clear(maxEle); 
-        
-       append("Command: " + e.detail.command + " => Session Expired");
-    };
-    
-    client.onServerType = function(e)
-    {
-       clear(maxEle); 
-        
-       append("Command: " + e.detail.command + " => Type: " + e.detail.type);
-    };
-    
-    client.onSetTimeout = function(e)
-    {
-       clear(maxEle); 
-        
-       append("Command: " + e.detail.command + " => Timeout: " + e.detail.timeout);
-    };
-    
-    
+
     client.opened = function(e)
     {
        setData(" Opened");
 
        append("Local Connection Opened");
-          
-       append("Get login code..."); 
-
-       client.getLoginCode();    
     };
           
     client.closed = function(e)
@@ -235,9 +190,9 @@
 
        append("Remote Connection Opened");
 
-       append("Get login code...");
+//      append("Get login code...");
 
-       remote.getLoginCode();
+//       remote.getLoginCode();
     };
 
     remote.closed = function(e)
