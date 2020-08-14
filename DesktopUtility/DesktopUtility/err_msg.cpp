@@ -4,21 +4,21 @@
 #include <stdio.h>
 #include <tchar.h>
 
-void GetCSBackupAPIErrorMessage(DWORD dwErr, char * wszMsgBuff);
+void GetCSBackupAPIErrorMessage(DWORD dwErr, TCHAR * wszMsgBuff);
 
 void PrintErrorMessage(DWORD dwErr)
 {
-	char   wszMsgBuff[512];  // Buffer for text.
+	TCHAR   wszMsgBuff[512];  // Buffer for text.
 	GetCSBackupAPIErrorMessage(dwErr, wszMsgBuff);
 
-	_tprintf("ERROR: SCardReleaseContext: %s (0x%lX)\n", wszMsgBuff, dwErr);
+	_tprintf(_T("ERROR: SCardReleaseContext: %s (0x%lX)\n"), wszMsgBuff, dwErr);
 }
 
 // Get error message text, given an error code.
 // Typically, the dwErr parameter passed to this function is retrieved
 // from GetLastError().
 
-void GetCSBackupAPIErrorMessage(DWORD dwErr, char * wszMsgBuff)
+void GetCSBackupAPIErrorMessage(DWORD dwErr, TCHAR * wszMsgBuff)
 {
 
 	DWORD   dwChars;  // Number of chars returned.
@@ -41,7 +41,7 @@ void GetCSBackupAPIErrorMessage(DWORD dwErr, char * wszMsgBuff)
 		HINSTANCE hInst;
 
 		// Load the library.
-		hInst = LoadLibrary("Ntdsbmsg.dll");
+		hInst = LoadLibrary(_T("Ntdsbmsg.dll"));
 		if (NULL == hInst)
 		{
 			printf("cannot load Ntdsbmsg.dll\n");

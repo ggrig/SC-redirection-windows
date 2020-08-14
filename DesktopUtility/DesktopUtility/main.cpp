@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <scd_pcsc.h>
+#include <tchar.h>
 
 #include <sstream>
 #include <iomanip>
@@ -23,14 +24,14 @@ int main()
 
 		std::string code = server.getCardCode(&server.data, &err);//hexStr(server.data.data, server.data.datalen);
 
-		printf("ATR %s\n", code.c_str());
+		_tprintf(_T("ATR %s\n"), code.c_str());
 	}
 	else
 	{
-		printf("Error %s\n", server.data.errmsg);
+		_tprintf(_T("Error %s\n"), server.data.errmsg);
 	}
 
 	SCD_Crypto sc_crypto;
-	TCHAR PIN[] = "";
+	TCHAR PIN[] = _T("");
 	sc_crypto.SmartCardLogon(PIN);
 }

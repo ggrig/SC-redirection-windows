@@ -11,6 +11,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include <tchar.h>
 #else
 #include <wintypes.h>
 #endif
@@ -33,8 +34,8 @@ class SCD_PCSC
         int error     = 0;  // card error
         int atrvalid  = 0;  // set to 1 if readed atrcode is valid
 
-        char *errmsg     = NULL; // card error message
-        char *freeErrMsg = NULL; // free resource error message
+		TCHAR *errmsg     = NULL; // card error message
+        TCHAR *freeErrMsg = NULL; // free resource error message
 
         unsigned char *data   = NULL; // readed data buffer
         unsigned int  datalen = 0;    // data len (bytes)
@@ -44,19 +45,19 @@ class SCD_PCSC
 
      BYTE pbAtr[MAX_ATR_SIZE];
 
-     char pbReader[MAX_READERNAME];
+     TCHAR pbReader[MAX_READERNAME];
 
-     char msg[1024];       // card message
+     TCHAR msg[1024];       // card message
 
-     char lastError[1024]; // last error message
+     TCHAR lastError[1024]; // last error message
 
-     char *ptr;
-     char **readers = NULL; // array of readers;
+     TCHAR *ptr;
+     TCHAR **readers = NULL; // array of readers;
 
      int nbReaders; // readers number
      int reader_nb;
 
-     LPSTR mszReaders = NULL;
+     LPTSTR mszReaders = NULL;
 
      SCARDHANDLE  hCard;    // card handle
      SCARDCONTEXT hContext; // current card context

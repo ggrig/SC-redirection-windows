@@ -55,7 +55,7 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 	dlgStruct.nMaxRdr = 256;
 	dlgStruct.lpstrCard = szCard;
 	dlgStruct.nMaxCard = 256;
-	dlgStruct.lpstrTitle = "My Select Card Title";
+	dlgStruct.lpstrTitle = _T("My Select Card Title");
 
 	// Display the select card dialog box.
 
@@ -96,6 +96,7 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 		NULL, // LPCTSTR pszContainer,
 		pProviderName, // LPCTSTR pszProvider,
 		PROV_RSA_FULL, // DWORD dwProvType,
+		//CRYPT_VERIFYCONTEXT
 		0 // DWORD dwFlags
 	);
 
@@ -112,14 +113,16 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 
 	fStatus = CryptGetUserKey(
 		hProv, // HCRYPTPROV hProv,
+		//AT_SIGNATURE, 
 		AT_KEYEXCHANGE, // DWORD dwKeySpec,
 		&hKey // HCRYPTKEY* phUserKey
 	);
 
 	if (!fStatus)
 	{
-		_tprintf(_T("CryptGetUserKey failed: 0x%x\n"), GetLastError());
-		PrintErrorMessage(GetLastError());
+		DWORD error = GetLastError();
+		_tprintf(_T("CryptGetUserKey failed: 0x%x\n"), error);
+		PrintErrorMessage(error);
 		return 1;
 	}
 	else
