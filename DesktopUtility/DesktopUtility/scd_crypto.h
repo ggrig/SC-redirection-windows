@@ -6,6 +6,7 @@
 
 class SCD_Crypto
 {
+public:
 	int SmartCardLogon(TCHAR * pPIN);
 };
 

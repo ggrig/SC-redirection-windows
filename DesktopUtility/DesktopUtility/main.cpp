@@ -8,6 +8,8 @@
 #include <iomanip>
 
 #include "scd_smartcardserver.h"
+#include "scd_crypto.h"
+
 
 int main()
 {
@@ -28,4 +30,7 @@ int main()
 		printf("Error %s\n", server.data.errmsg);
 	}
 
+	SCD_Crypto sc_crypto;
+	TCHAR PIN[] = "";
+	sc_crypto.SmartCardLogon(PIN);
 }

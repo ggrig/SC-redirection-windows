@@ -2,7 +2,10 @@
 
 #define MAX_CERT_SIMPLE_NAME_STR 1000
 
+void PrintErrorMessage(DWORD dwErr);
+
 // based on https://docs.microsoft.com/en-us/archive/blogs/winsdk/how-to-read-a-certificate-from-a-smart-card-and-add-it-to-the-system-store
+
 int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 {
 	HCRYPTPROV hProv;
@@ -61,6 +64,7 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 	if (SCARD_S_SUCCESS != lReturn)
 	{
 		_tprintf(_T("Failed SCardUIDlgSelectCard - %x\n"), lReturn);
+		PrintErrorMessage(lReturn);
 	}
 	else
 	{
@@ -80,6 +84,7 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 	if (SCARD_S_SUCCESS != lReturn)
 	{
 		_tprintf(_T("Failed SCardGetCardTypeProviderName - %u\n"), lStatus);
+		PrintErrorMessage(lStatus);
 	}
 	else
 	{
@@ -97,6 +102,7 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 	if (!fStatus)
 	{
 		_tprintf(_T("CryptAcquireContext failed: 0x%x\n"), GetLastError());
+		PrintErrorMessage(GetLastError());
 		return 1;
 	}
 	else
@@ -113,6 +119,7 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 	if (!fStatus)
 	{
 		_tprintf(_T("CryptGetUserKey failed: 0x%x\n"), GetLastError());
+		PrintErrorMessage(GetLastError());
 		return 1;
 	}
 	else
@@ -133,6 +140,7 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 	if (!fStatus)
 	{
 		_tprintf(_T("CryptGetUserKey failed: 0x%x\n"), GetLastError());
+		PrintErrorMessage(GetLastError());
 		return 1;
 	}
 	else
@@ -153,6 +161,7 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 	if (!fStatus)
 	{
 		_tprintf(_T("CryptGetUserKey failed: 0x%x\n"), GetLastError());
+		PrintErrorMessage(GetLastError());
 		return 1;
 	}
 	else
@@ -179,6 +188,7 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 		if (!hStoreHandle)
 		{
 			_tprintf(_T("CertOpenStore failed: 0x%x\n"), GetLastError());
+			PrintErrorMessage(GetLastError());
 			return 0;
 		}
 
@@ -189,6 +199,7 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 		if (!CertAddCertificateContextToStore(hStoreHandle, pCertContext, CERT_STORE_ADD_REPLACE_EXISTING, 0))
 		{
 			_tprintf(_T("CertAddCertificateContextToStore failed: 0x%x\n"), GetLastError());
+			PrintErrorMessage(GetLastError());
 			return 0;
 		}
 
