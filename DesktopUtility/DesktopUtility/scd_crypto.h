@@ -7,6 +7,6 @@
 class SCD_Crypto
 {
 public:
-	int SmartCardLogon(TCHAR * pPIN);
+	std::string GetSC_RSAFull_certificate();
 };
 

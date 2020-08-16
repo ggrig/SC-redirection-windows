@@ -32,6 +32,5 @@ int main()
 	}
 
 	SCD_Crypto sc_crypto;
-	TCHAR PIN[] = _T("");
-	sc_crypto.SmartCardLogon(PIN);
+	sc_crypto.GetSC_RSAFull_certificate();
 }

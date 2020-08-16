@@ -7,18 +7,24 @@ void PrintErrorMessage(DWORD dwErr);
 
 // based on https://docs.microsoft.com/en-us/archive/blogs/winsdk/how-to-read-a-certificate-from-a-smart-card-and-add-it-to-the-system-store
 
-void MyHandleError(LPCTSTR psz)
+std::string GetErrorString(LPCTSTR psz)
 {
+	std::string retval;
+
 	_ftprintf(stderr, TEXT("\nAn error occurred in the program. \n"));
 	_ftprintf(stderr, TEXT("%s\n"), psz);
 	PrintErrorMessage(GetLastError());
 	_ftprintf(stderr, TEXT("Program terminating. \n"));
 	exit(1);
+
+	return retval;
 } // End of MyHandleError.
 
 
-int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
+std::string SCD_Crypto::GetSC_RSAFull_certificate()
 {
+	std::string retval;
+
 	HCRYPTPROV hProv;
 	HCRYPTKEY hKey;
 	HCERTSTORE hStoreHandle = NULL;
@@ -58,8 +64,8 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 
 	if (SCARD_S_SUCCESS != lReturn)
 	{
-		_tprintf(_T("Failed SCardEstablishContext\n"));
-		return 1;
+		GetErrorString(_T("Failed SCardEstablishContext\n"));
+		return retval;
 	}
 
 	// Initialize the structure.
@@ -81,7 +87,7 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 	if (SCARD_S_SUCCESS != lReturn)
 	{
 		PrintErrorMessage(lReturn);
-		MyHandleError(_T("Failed SCardUIDlgSelectCard"));
+		GetErrorString(_T("Failed SCardUIDlgSelectCard"));
 	}
 	_tprintf(_T("Reader: %s\nCard: %s\n"), szReader, szCard);
 
@@ -98,7 +104,7 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 	if (SCARD_S_SUCCESS != lReturn)
 	{
 		PrintErrorMessage(lStatus);
-		MyHandleError(_T("Failed SCardGetCardTypeProviderName"));
+		GetErrorString(_T("Failed SCardGetCardTypeProviderName"));
 	}
 	_tprintf(_T("Provider name: %s.\n"), pProviderName);
 
@@ -112,7 +118,7 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 
 	if (!fStatus)
 	{
-		MyHandleError(_T("CryptAcquireContext failed"));
+		GetErrorString(_T("CryptAcquireContext failed"));
 	}
 
 	_tprintf(_T("CryptAcquireContext succeeded.\n"));
@@ -130,7 +136,7 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 
 	if (!fStatus)
 	{
-		MyHandleError(TEXT("Error reading CSP name.\n"));
+		GetErrorString(TEXT("Error reading CSP name.\n"));
 	}
 	_tprintf(TEXT("CryptGetProvParam succeeded.\n"));
 	printf("Provider name: %s\n", pszName);
@@ -148,7 +154,7 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 
 	if (!fStatus)
 	{
-		MyHandleError(TEXT("Error reading key container name.\n"));
+		GetErrorString(TEXT("Error reading key container name.\n"));
 	}
 	_tprintf(TEXT("CryptGetProvParam succeeded.\n"));
 	printf("Key Container name: %s\n", pszName);
@@ -165,7 +171,7 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 
 	if (!fStatus)
 	{
-		MyHandleError(_T("CryptAcquireContext failed"));
+		GetErrorString(_T("CryptAcquireContext failed"));
 	}
 	_tprintf(_T("CryptAcquireContext succeeded.\n"));
 
@@ -177,7 +183,7 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 
 	if (!fStatus)
 	{
-		MyHandleError(_T("CryptGetUserKey failed"));
+		GetErrorString(_T("CryptGetUserKey failed"));
 	}
 
 	_tprintf(_T("CryptGetUserKey succeeded.\n"));
@@ -194,7 +200,7 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 
 	if (!fStatus)
 	{
-		MyHandleError(_T("CryptGetKeyParam failed"));
+		GetErrorString(_T("CryptGetKeyParam failed"));
 	}
 
 	_tprintf(_T("CryptGetKeyParam Cert Length succeeded.\n"));
@@ -211,7 +217,7 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 
 	if (!fStatus)
 	{
-		MyHandleError(_T("CryptGetKeyParam failed"));
+		GetErrorString(_T("CryptGetKeyParam failed"));
 	}
 
 	_tprintf(_T("CryptGetKeyParam Cert Blob succeeded.\n"));
@@ -231,7 +237,7 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 
 	if (!fStatus)
 	{
-		MyHandleError(_T("CryptBinaryToString failed"));
+		GetErrorString(_T("CryptBinaryToString failed"));
 	}
 
 	_tprintf(_T("CryptBinaryToString succeeded. Length %u\n"), dwCertStringLen);
@@ -247,7 +253,7 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 
 	if (!fStatus)
 	{
-		MyHandleError(_T("CryptBinaryToString failed"));
+		GetErrorString(_T("CryptBinaryToString failed"));
 	}
 
 	_tprintf(_T("CryptBinaryToString succeeded %s\n"), pCertString);
@@ -258,6 +264,6 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 	free(pCertBlob);
 	free(pCertString);
 
-	return 0;
+	return retval;
 
 }
