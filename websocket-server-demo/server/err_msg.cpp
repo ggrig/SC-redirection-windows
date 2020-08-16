@@ -2,12 +2,13 @@
 
 #include <windows.h>
 #include <stdio.h>
+#include <tchar.h>
 
 // Get error message text, given an error code.
 // Typically, the dwErr parameter passed to this function is retrieved
 // from GetLastError().
 
-void GetCSBackupAPIErrorMessage(DWORD dwErr, char * wszMsgBuff)
+void GetCSBackupAPIErrorMessage(DWORD dwErr, TCHAR * wszMsgBuff)
 {
 
 	DWORD   dwChars;  // Number of chars returned.
@@ -30,7 +31,7 @@ void GetCSBackupAPIErrorMessage(DWORD dwErr, char * wszMsgBuff)
 		HINSTANCE hInst;
 
 		// Load the library.
-		hInst = LoadLibrary("Ntdsbmsg.dll");
+		hInst = LoadLibrary(_T("Ntdsbmsg.dll"));
 		if (NULL == hInst)
 		{
 			printf("cannot load Ntdsbmsg.dll\n");
