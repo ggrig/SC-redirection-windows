@@ -33,4 +33,9 @@ int main()
 	std::string retval = sc_crypto.GetSC_RSAFull_certificate();
 	std::cout << retval;
 
+	//if (!sc_crypto.certificate.empty())
+	//{
+	//	std::cout << sc_crypto.certificate;
+	//}
+
 }

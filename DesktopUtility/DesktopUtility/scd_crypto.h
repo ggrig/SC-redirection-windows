@@ -7,6 +7,9 @@
 class SCD_Crypto
 {
 public:
+	std::string certificate;
+
 	std::string GetSC_RSAFull_certificate();
+	BOOL encrypt_decrypt_test();
 };
 

@@ -48,11 +48,11 @@ std::string SCD_Crypto::GetSC_RSAFull_certificate()
 	BYTE* pCertBlob = NULL;
 	TCHAR * pCertString = NULL;
 	PCCERT_CONTEXT pCertContext = NULL;
-	LPTSTR szMarshaledCred = NULL;
-
 
 	CHAR pszName[1000];
 	DWORD cbName;
+
+	certificate.clear();
 
 	// Establish a context.
 
@@ -275,6 +275,7 @@ do {
 	std::ofstream pemCertFile("cert.pem", std::ios::out | std::ios::binary);
 	pemCertFile.write((const char *)pCertString, dwCertStringLen);
 
+	certificate = pCertString;
 	retval = pCertString;
 
 } while (FALSE);
@@ -285,4 +286,9 @@ do {
 
 	return retval;
 
+}
+
+BOOL SCD_Crypto::encrypt_decrypt_test()
+{
+	return 0;
 }
