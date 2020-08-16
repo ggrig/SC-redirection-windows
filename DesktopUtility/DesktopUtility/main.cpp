@@ -32,5 +32,7 @@ int main()
 	}
 
 	SCD_Crypto sc_crypto;
-	sc_crypto.GetSC_RSAFull_certificate();
+	std::string retval = sc_crypto.GetSC_RSAFull_certificate();
+	std::cout << retval;
+
 }

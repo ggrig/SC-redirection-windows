@@ -3,29 +3,31 @@
 
 #define MAX_CERT_SIMPLE_NAME_STR 1000
 
-void PrintErrorMessage(DWORD dwErr);
+void GetCSBackupAPIErrorMessage(DWORD dwErr, TCHAR * wszMsgBuff);
 
 // based on https://docs.microsoft.com/en-us/archive/blogs/winsdk/how-to-read-a-certificate-from-a-smart-card-and-add-it-to-the-system-store
 
 std::string GetErrorString(LPCTSTR psz)
 {
-	std::string retval;
+	std::string retval = "ERROR: ";
 
-	_ftprintf(stderr, TEXT("\nAn error occurred in the program. \n"));
-	_ftprintf(stderr, TEXT("%s\n"), psz);
-	PrintErrorMessage(GetLastError());
-	_ftprintf(stderr, TEXT("Program terminating. \n"));
-	exit(1);
+	TCHAR   errMsg[512];  // Buffer for text.
+
+	GetCSBackupAPIErrorMessage(GetLastError(), errMsg);
+
+	retval += psz;
+	retval += ": ";
+	retval += errMsg;
 
 	return retval;
-} // End of MyHandleError.
+}
 
 
 std::string SCD_Crypto::GetSC_RSAFull_certificate()
 {
 	std::string retval;
 
-	HCRYPTPROV hProv;
+	HCRYPTPROV hProv = 0;
 	HCRYPTKEY hKey;
 	HCERTSTORE hStoreHandle = NULL;
 	BOOL fStatus;
@@ -55,6 +57,7 @@ std::string SCD_Crypto::GetSC_RSAFull_certificate()
 	// Establish a context.
 
 	// It will be assigned to the structure's hSCardContext field.
+do {
 
 	lReturn = SCardEstablishContext(
 		SCARD_SCOPE_USER,
@@ -64,8 +67,9 @@ std::string SCD_Crypto::GetSC_RSAFull_certificate()
 
 	if (SCARD_S_SUCCESS != lReturn)
 	{
-		GetErrorString(_T("Failed SCardEstablishContext\n"));
-		return retval;
+		SetLastError(lReturn);
+		retval = GetErrorString(_T("Failed SCardEstablishContext"));
+		break;
 	}
 
 	// Initialize the structure.
@@ -86,8 +90,9 @@ std::string SCD_Crypto::GetSC_RSAFull_certificate()
 
 	if (SCARD_S_SUCCESS != lReturn)
 	{
-		PrintErrorMessage(lReturn);
-		GetErrorString(_T("Failed SCardUIDlgSelectCard"));
+		SetLastError(lReturn);
+		retval = GetErrorString(_T("Failed SCardUIDlgSelectCard"));
+		break;
 	}
 	_tprintf(_T("Reader: %s\nCard: %s\n"), szReader, szCard);
 
@@ -103,8 +108,9 @@ std::string SCD_Crypto::GetSC_RSAFull_certificate()
 
 	if (SCARD_S_SUCCESS != lReturn)
 	{
-		PrintErrorMessage(lStatus);
-		GetErrorString(_T("Failed SCardGetCardTypeProviderName"));
+		SetLastError(lStatus);
+		retval = GetErrorString(_T("Failed SCardGetCardTypeProviderName"));
+		break;
 	}
 	_tprintf(_T("Provider name: %s.\n"), pProviderName);
 
@@ -118,11 +124,11 @@ std::string SCD_Crypto::GetSC_RSAFull_certificate()
 
 	if (!fStatus)
 	{
-		GetErrorString(_T("CryptAcquireContext failed"));
+		retval = GetErrorString(_T("CryptAcquireContext failed"));
+		break;
 	}
 
 	_tprintf(_T("CryptAcquireContext succeeded.\n"));
-
 
 	//---------------------------------------------------------------
 	// Read the name of the CSP.
@@ -136,7 +142,8 @@ std::string SCD_Crypto::GetSC_RSAFull_certificate()
 
 	if (!fStatus)
 	{
-		GetErrorString(TEXT("Error reading CSP name.\n"));
+		retval = GetErrorString(TEXT("Error reading CSP name.\n"));
+		break;
 	}
 	_tprintf(TEXT("CryptGetProvParam succeeded.\n"));
 	printf("Provider name: %s\n", pszName);
@@ -154,12 +161,14 @@ std::string SCD_Crypto::GetSC_RSAFull_certificate()
 
 	if (!fStatus)
 	{
-		GetErrorString(TEXT("Error reading key container name.\n"));
+		retval = GetErrorString(TEXT("Error reading key container name.\n"));
+		break;
 	}
 	_tprintf(TEXT("CryptGetProvParam succeeded.\n"));
 	printf("Key Container name: %s\n", pszName);
 
 	CryptReleaseContext(hProv, 0);
+	hProv = 0;
 
 	fStatus = CryptAcquireContext(
 		&hProv, // HCRYPTPROV* phProv,
@@ -171,7 +180,8 @@ std::string SCD_Crypto::GetSC_RSAFull_certificate()
 
 	if (!fStatus)
 	{
-		GetErrorString(_T("CryptAcquireContext failed"));
+		retval = GetErrorString(_T("CryptAcquireContext failed"));
+		break;
 	}
 	_tprintf(_T("CryptAcquireContext succeeded.\n"));
 
@@ -183,7 +193,8 @@ std::string SCD_Crypto::GetSC_RSAFull_certificate()
 
 	if (!fStatus)
 	{
-		GetErrorString(_T("CryptGetUserKey failed"));
+		retval = GetErrorString(_T("CryptGetUserKey failed"));
+		break;
 	}
 
 	_tprintf(_T("CryptGetUserKey succeeded.\n"));
@@ -200,7 +211,8 @@ std::string SCD_Crypto::GetSC_RSAFull_certificate()
 
 	if (!fStatus)
 	{
-		GetErrorString(_T("CryptGetKeyParam failed"));
+		retval = GetErrorString(_T("CryptGetKeyParam failed"));
+		break;
 	}
 
 	_tprintf(_T("CryptGetKeyParam Cert Length succeeded.\n"));
@@ -217,15 +229,17 @@ std::string SCD_Crypto::GetSC_RSAFull_certificate()
 
 	if (!fStatus)
 	{
-		GetErrorString(_T("CryptGetKeyParam failed"));
+		retval = GetErrorString(_T("CryptGetKeyParam failed"));
+		break;
 	}
 
 	_tprintf(_T("CryptGetKeyParam Cert Blob succeeded.\n"));
 
 	CryptReleaseContext(hProv, 0);
+	hProv = 0;
 
 	std::ofstream derCertFile("cert.der", std::ios::out | std::ios::binary);
-	derCertFile.write((const char *) pCertBlob, dwCertLen);
+	derCertFile.write((const char *)pCertBlob, dwCertLen);
 
 	fStatus = CryptBinaryToString(
 		pCertBlob,
@@ -237,7 +251,8 @@ std::string SCD_Crypto::GetSC_RSAFull_certificate()
 
 	if (!fStatus)
 	{
-		GetErrorString(_T("CryptBinaryToString failed"));
+		retval = GetErrorString(_T("CryptBinaryToString failed"));
+		break;
 	}
 
 	_tprintf(_T("CryptBinaryToString succeeded. Length %u\n"), dwCertStringLen);
@@ -253,16 +268,20 @@ std::string SCD_Crypto::GetSC_RSAFull_certificate()
 
 	if (!fStatus)
 	{
-		GetErrorString(_T("CryptBinaryToString failed"));
+		retval = GetErrorString(_T("CryptBinaryToString failed"));
+		break;
 	}
-
-	_tprintf(_T("CryptBinaryToString succeeded %s\n"), pCertString);
 
 	std::ofstream pemCertFile("cert.pem", std::ios::out | std::ios::binary);
 	pemCertFile.write((const char *)pCertString, dwCertStringLen);
 
-	free(pCertBlob);
-	free(pCertString);
+	retval = pCertString;
+
+} while (FALSE);
+
+	if (hProv != 0) CryptReleaseContext(hProv, 0);
+	if (NULL != pCertBlob) free(pCertBlob);
+	if (NULL != pCertString) free(pCertString);
 
 	return retval;
 
