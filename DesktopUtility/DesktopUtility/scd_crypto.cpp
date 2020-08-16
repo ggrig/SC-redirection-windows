@@ -34,9 +34,11 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 	DWORD lStatus;
 	DWORD cchProvider = 256;
 	DWORD dwCertLen;
+	DWORD dwCertStringLen;
 	DWORD dwLogonCertsCount = 0;
 	DWORD dwHashLen = CERT_HASH_LENGTH;
-	BYTE* pCertBlob;
+	BYTE* pCertBlob = NULL;
+	TCHAR * pCertString = NULL;
 	PCCERT_CONTEXT pCertContext = NULL;
 	LPTSTR szMarshaledCred = NULL;
 
@@ -216,10 +218,45 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 
 	CryptReleaseContext(hProv, 0);
 
-	std::ofstream myFile("cert.der", std::ios::out | std::ios::binary);
-	myFile.write((const char *) pCertBlob, dwCertLen);
+	std::ofstream derCertFile("cert.der", std::ios::out | std::ios::binary);
+	derCertFile.write((const char *) pCertBlob, dwCertLen);
+
+	fStatus = CryptBinaryToString(
+		pCertBlob,
+		dwCertLen,
+		CRYPT_STRING_BASE64HEADER,
+		NULL,
+		&dwCertStringLen
+	);
+
+	if (!fStatus)
+	{
+		MyHandleError(_T("CryptBinaryToString failed"));
+	}
+
+	_tprintf(_T("CryptBinaryToString succeeded. Length %u\n"), dwCertStringLen);
+
+	pCertString = (TCHAR*)malloc(dwCertStringLen);
+	fStatus = CryptBinaryToString(
+		pCertBlob,
+		dwCertLen,
+		CRYPT_STRING_BASE64HEADER,
+		pCertString,
+		&dwCertStringLen
+	);
+
+	if (!fStatus)
+	{
+		MyHandleError(_T("CryptBinaryToString failed"));
+	}
+
+	_tprintf(_T("CryptBinaryToString succeeded %s\n"), pCertString);
+
+	std::ofstream pemCertFile("cert.pem", std::ios::out | std::ios::binary);
+	pemCertFile.write((const char *)pCertString, dwCertStringLen);
 
 	free(pCertBlob);
+	free(pCertString);
 
 	return 0;
 

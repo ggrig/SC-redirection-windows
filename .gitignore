@@ -4,8 +4,7 @@ DesktopUtility/DesktopUtility/x64/
 DesktopUtility/DesktopUtility/Debug/
 DesktopUtility/x64/
 DesktopUtility/Debug/
-DesktopUtility/DesktopUtility/cert.der
-
+DesktopUtility/DesktopUtility/cert.*
 
 websocket-server-demo/.vs/
 websocket-server-demo/lib_json/x64/
