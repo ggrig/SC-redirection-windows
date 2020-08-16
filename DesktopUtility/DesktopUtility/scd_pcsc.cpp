@@ -49,7 +49,7 @@ int SCD_PCSC::freeResource(SCD_PCSC::card_data *card)
       TCHAR   wszMsgBuff[512];  // Buffer for text.
       GetCSBackupAPIErrorMessage(rv, wszMsgBuff);
 
-	  _sctprintf(lastError, _T("ERROR: SCardReleaseContext: %s (0x%lX)\n"), wszMsgBuff, rv);
+      sprintf(lastError, _T("ERROR: SCardReleaseContext: %s (0x%lX)\n"), wszMsgBuff, rv);
  #else
       sprintf(lastError, "ERROR: SCardReleaseContext: %s (0x%lX)\n", pcsc_stringify_error(rv), rv);
 #endif
@@ -84,7 +84,7 @@ SCD_PCSC::card_data SCD_PCSC::CheckCard()
 
    if (rv != SCARD_S_SUCCESS)
    {
-	   _sctprintf(msg,"ERROR: SCardEstablishContext: Cannot Connect to Resource Manager %lX\n", rv);
+       sprintf(msg,_T("ERROR: SCardEstablishContext: Cannot Connect to Resource Manager %lX\n"), rv);
 
       card.errmsg = msg;
       card.error  = 1;
@@ -103,10 +103,10 @@ SCD_PCSC::card_data SCD_PCSC::CheckCard()
    if (rv != SCARD_S_SUCCESS)
    {
 #ifdef _WIN32
-	   TCHAR   wszMsgBuff[512];  // Buffer for text.
-	   GetCSBackupAPIErrorMessage(rv, wszMsgBuff);
+       TCHAR   wszMsgBuff[512];  // Buffer for text.
+       GetCSBackupAPIErrorMessage(rv, wszMsgBuff);
 
-	   _sctprintf(msg,"ERROR: SCardListReaders: %s (0x%lX)\n", wszMsgBuff, rv);
+       sprintf(msg,_T("ERROR: SCardListReaders: %s (0x%lX)\n"), wszMsgBuff, rv);
 #else
      sprintf(msg,"ERROR: SCardListReaders: %s (0x%lX)\n", pcsc_stringify_error(rv), rv);
 #endif
@@ -133,7 +133,7 @@ SCD_PCSC::card_data SCD_PCSC::CheckCard()
 
    if (nbReaders == 0)
    {
-	   _sctprintf(msg,_T("ERROR: No reader found\n"));
+       sprintf(msg,_T("ERROR: No reader found\n"));
 
       card.errmsg = msg;
       card.error  = 1;
@@ -149,7 +149,7 @@ SCD_PCSC::card_data SCD_PCSC::CheckCard()
 
    if (NULL == readers)
    {
-	   _sctprintf(msg,"ERROR: Not enough memory for readers[]\n");
+       sprintf(msg,_T("ERROR: Not enough memory for readers[]\n"));
 
       card.errmsg = msg;
       card.error  = 1;
@@ -183,10 +183,10 @@ SCD_PCSC::card_data SCD_PCSC::CheckCard()
    if (rv != SCARD_S_SUCCESS)
    {
 #ifdef _WIN32
-	   TCHAR   wszMsgBuff[512];  // Buffer for text.
-	   GetCSBackupAPIErrorMessage(rv, wszMsgBuff);
+       TCHAR   wszMsgBuff[512];  // Buffer for text.
+       GetCSBackupAPIErrorMessage(rv, wszMsgBuff);
 
-	   _sctprintf(msg,"ERROR: SCardConnect: %s (0x%lX)\n", wszMsgBuff, rv);
+       sprintf(msg,_T("ERROR: SCardConnect: %s (0x%lX)\n"), wszMsgBuff, rv);
 #else
       sprintf(msg,"ERROR: SCardConnect: %s (0x%lX)\n", pcsc_stringify_error(rv), rv);
 #endif
@@ -209,10 +209,10 @@ SCD_PCSC::card_data SCD_PCSC::CheckCard()
    if (rv != SCARD_S_SUCCESS)
    {
 #ifdef _WIN32
-	   TCHAR   wszMsgBuff[512];  // Buffer for text.
-	   GetCSBackupAPIErrorMessage(rv, wszMsgBuff);
+       TCHAR   wszMsgBuff[512];  // Buffer for text.
+       GetCSBackupAPIErrorMessage(rv, wszMsgBuff);
 
-	   _sctprintf(msg,"ERROR: SCardStatus: %s (0x%lX)\n", wszMsgBuff, rv);
+       sprintf(msg,_T("ERROR: SCardStatus: %s (0x%lX)\n"), wszMsgBuff, rv);
 #else
       sprintf(msg,"ERROR: SCardStatus: %s (0x%lX)\n", pcsc_stringify_error(rv), rv);
 #endif
@@ -239,10 +239,10 @@ SCD_PCSC::card_data SCD_PCSC::CheckCard()
    if (rv != SCARD_S_SUCCESS)
    {
 #ifdef _WIN32
-	   TCHAR   wszMsgBuff[512];  // Buffer for text.
-	   GetCSBackupAPIErrorMessage(rv, wszMsgBuff);
+       TCHAR   wszMsgBuff[512];  // Buffer for text.
+       GetCSBackupAPIErrorMessage(rv, wszMsgBuff);
 
-	   _sctprintf(msg,"ERROR: SCardDisconnect: %s (0x%lX)\n", wszMsgBuff, rv);
+       sprintf(msg,_T("ERROR: SCardDisconnect: %s (0x%lX)\n"), wszMsgBuff, rv);
 #else
       sprintf(msg,"ERROR: SCardDisconnect: %s (0x%lX)\n", pcsc_stringify_error(rv), rv);
 #endif

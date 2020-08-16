@@ -34,7 +34,7 @@ class SCD_PCSC
         int error     = 0;  // card error
         int atrvalid  = 0;  // set to 1 if readed atrcode is valid
 
-		TCHAR *errmsg     = NULL; // card error message
+        TCHAR *errmsg; // card error message
         TCHAR *freeErrMsg = NULL; // free resource error message
 
         unsigned char *data   = NULL; // readed data buffer
