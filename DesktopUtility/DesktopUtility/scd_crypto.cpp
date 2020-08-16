@@ -1,3 +1,4 @@
+#include <fstream>
 #include "scd_crypto.h"
 
 #define MAX_CERT_SIMPLE_NAME_STR 1000
@@ -5,6 +6,16 @@
 void PrintErrorMessage(DWORD dwErr);
 
 // based on https://docs.microsoft.com/en-us/archive/blogs/winsdk/how-to-read-a-certificate-from-a-smart-card-and-add-it-to-the-system-store
+
+void MyHandleError(LPCTSTR psz)
+{
+	_ftprintf(stderr, TEXT("\nAn error occurred in the program. \n"));
+	_ftprintf(stderr, TEXT("%s\n"), psz);
+	PrintErrorMessage(GetLastError());
+	_ftprintf(stderr, TEXT("Program terminating. \n"));
+	exit(1);
+} // End of MyHandleError.
+
 
 int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 {
@@ -28,6 +39,10 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 	BYTE* pCertBlob;
 	PCCERT_CONTEXT pCertContext = NULL;
 	LPTSTR szMarshaledCred = NULL;
+
+
+	CHAR pszName[1000];
+	DWORD cbName;
 
 	// Establish a context.
 
@@ -63,13 +78,10 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 
 	if (SCARD_S_SUCCESS != lReturn)
 	{
-		_tprintf(_T("Failed SCardUIDlgSelectCard - %x\n"), lReturn);
 		PrintErrorMessage(lReturn);
+		MyHandleError(_T("Failed SCardUIDlgSelectCard"));
 	}
-	else
-	{
-		_tprintf(_T("Reader: %s\nCard: %s\n"), szReader, szCard);
-	}
+	_tprintf(_T("Reader: %s\nCard: %s\n"), szReader, szCard);
 
 	lStatus = SCardGetCardTypeProviderName(
 		dlgStruct.hSCardContext, // SCARDCONTEXT hContext,
@@ -83,52 +95,90 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 
 	if (SCARD_S_SUCCESS != lReturn)
 	{
-		_tprintf(_T("Failed SCardGetCardTypeProviderName - %u\n"), lStatus);
 		PrintErrorMessage(lStatus);
+		MyHandleError(_T("Failed SCardGetCardTypeProviderName"));
 	}
-	else
-	{
-		_tprintf(_T("Provider name: %s.\n"), pProviderName);
-	}
+	_tprintf(_T("Provider name: %s.\n"), pProviderName);
 
 	fStatus = CryptAcquireContext(
 		&hProv, // HCRYPTPROV* phProv,
 		NULL, // LPCTSTR pszContainer,
 		pProviderName, // LPCTSTR pszProvider,
 		PROV_RSA_FULL, // DWORD dwProvType,
-		//CRYPT_VERIFYCONTEXT
+		CRYPT_VERIFYCONTEXT // DWORD dwFlags
+	);
+
+	if (!fStatus)
+	{
+		MyHandleError(_T("CryptAcquireContext failed"));
+	}
+
+	_tprintf(_T("CryptAcquireContext succeeded.\n"));
+
+
+	//---------------------------------------------------------------
+	// Read the name of the CSP.
+	cbName = 1000;
+	fStatus = CryptGetProvParam(
+		hProv,
+		PP_NAME,
+		(BYTE*)pszName,
+		&cbName,
+		0);
+
+	if (!fStatus)
+	{
+		MyHandleError(TEXT("Error reading CSP name.\n"));
+	}
+	_tprintf(TEXT("CryptGetProvParam succeeded.\n"));
+	printf("Provider name: %s\n", pszName);
+
+	//---------------------------------------------------------------
+	// Read the name of the key container.
+	cbName = 1000;
+
+	fStatus = CryptGetProvParam(
+		hProv,
+		PP_ENUMCONTAINERS,
+		(BYTE*)pszName,
+		&cbName,
+		CRYPT_FIRST);
+
+	if (!fStatus)
+	{
+		MyHandleError(TEXT("Error reading key container name.\n"));
+	}
+	_tprintf(TEXT("CryptGetProvParam succeeded.\n"));
+	printf("Key Container name: %s\n", pszName);
+
+	CryptReleaseContext(hProv, 0);
+
+	fStatus = CryptAcquireContext(
+		&hProv, // HCRYPTPROV* phProv,
+		pszName, // LPCTSTR pszContainer,
+		pProviderName, // LPCTSTR pszProvider,
+		PROV_RSA_FULL, // DWORD dwProvType,
 		0 // DWORD dwFlags
 	);
 
 	if (!fStatus)
 	{
-		_tprintf(_T("CryptAcquireContext failed: 0x%x\n"), GetLastError());
-		PrintErrorMessage(GetLastError());
-		return 1;
+		MyHandleError(_T("CryptAcquireContext failed"));
 	}
-	else
-	{
-		_tprintf(_T("CryptAcquireContext succeeded.\n"));
-	}
+	_tprintf(_T("CryptAcquireContext succeeded.\n"));
 
 	fStatus = CryptGetUserKey(
 		hProv, // HCRYPTPROV hProv,
-		//AT_SIGNATURE, 
 		AT_KEYEXCHANGE, // DWORD dwKeySpec,
 		&hKey // HCRYPTKEY* phUserKey
 	);
 
 	if (!fStatus)
 	{
-		DWORD error = GetLastError();
-		_tprintf(_T("CryptGetUserKey failed: 0x%x\n"), error);
-		PrintErrorMessage(error);
-		return 1;
+		MyHandleError(_T("CryptGetUserKey failed"));
 	}
-	else
-	{
-		_tprintf(_T("CryptGetUserKey succeeded.\n"));
-	}
+
+	_tprintf(_T("CryptGetUserKey succeeded.\n"));
 
 	dwCertLen = 0;
 
@@ -142,16 +192,12 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 
 	if (!fStatus)
 	{
-		_tprintf(_T("CryptGetUserKey failed: 0x%x\n"), GetLastError());
-		PrintErrorMessage(GetLastError());
-		return 1;
-	}
-	else
-	{
-		_tprintf(_T("CryptGetUserKey succeeded.\n"));
+		MyHandleError(_T("CryptGetKeyParam failed"));
 	}
 
+	_tprintf(_T("CryptGetKeyParam Cert Length succeeded.\n"));
 	_tprintf(_T("dwCertLen: %u\n"), dwCertLen);
+
 	pCertBlob = (BYTE*)malloc(dwCertLen);
 	fStatus = CryptGetKeyParam(
 		hKey, // HCRYPTKEY hKey,
@@ -163,52 +209,17 @@ int SCD_Crypto::SmartCardLogon(TCHAR * pPIN)
 
 	if (!fStatus)
 	{
-		_tprintf(_T("CryptGetUserKey failed: 0x%x\n"), GetLastError());
-		PrintErrorMessage(GetLastError());
-		return 1;
-	}
-	else
-	{
-		_tprintf(_T("CryptGetUserKey succeeded.\n"));
+		MyHandleError(_T("CryptGetKeyParam failed"));
 	}
 
-	pCertContext = CertCreateCertificateContext(
-		PKCS_7_ASN_ENCODING | X509_ASN_ENCODING,
-		pCertBlob,
-		dwCertLen);
+	_tprintf(_T("CryptGetKeyParam Cert Blob succeeded.\n"));
 
-	if (pCertContext)
-	{
+	CryptReleaseContext(hProv, 0);
 
-		// Add the certificate to the MY store for the current user.
+	std::ofstream myFile("cert.der", std::ios::out | std::ios::binary);
+	myFile.write((const char *) pCertBlob, dwCertLen);
 
-		// Open Root cert store in users profile
-
-		_tprintf(_T("CertOpenStore... "));
-
-		hStoreHandle = CertOpenStore(CERT_STORE_PROV_SYSTEM, 0, 0, CERT_SYSTEM_STORE_CURRENT_USER, L"My");
-
-		if (!hStoreHandle)
-		{
-			_tprintf(_T("CertOpenStore failed: 0x%x\n"), GetLastError());
-			PrintErrorMessage(GetLastError());
-			return 0;
-		}
-
-		// Add self-signed cert to the store
-
-		_tprintf(_T("CertAddCertificateContextToStore... "));
-
-		if (!CertAddCertificateContextToStore(hStoreHandle, pCertContext, CERT_STORE_ADD_REPLACE_EXISTING, 0))
-		{
-			_tprintf(_T("CertAddCertificateContextToStore failed: 0x%x\n"), GetLastError());
-			PrintErrorMessage(GetLastError());
-			return 0;
-		}
-
-		CertFreeCertificateContext(pCertContext);
-
-	}
+	free(pCertBlob);
 
 	return 0;
 
