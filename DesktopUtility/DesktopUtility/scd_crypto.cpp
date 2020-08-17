@@ -2,6 +2,8 @@
 #include "scd_crypto.h"
 
 #define MAX_CERT_SIMPLE_NAME_STR 1000
+#define KEYLENGTH  0x00800000
+#define ENCRYPT_ALGORITHM CALG_RC4
 
 std::string GetErrorString(LPCTSTR psz);
 
@@ -258,8 +260,12 @@ std::string SCD_Crypto::encrypt_decrypt_test()
 {
 	std::string retval;
 	HCRYPTPROV hProv = 0;
+	HCRYPTKEY hXchgKey = 0;
 	HCRYPTKEY hKey = 0;
 	BOOL fStatus;
+
+	DWORD dwKeyBlobLen;
+	DWORD dwCertLen;
 
 	if (m_Certificate.empty())
 	{
@@ -289,10 +295,24 @@ std::string SCD_Crypto::encrypt_decrypt_test()
 		}
 		_tprintf(_T("CryptAcquireContext succeeded.\n"));
 
+
+		fStatus = CryptGenKey(
+			hProv,
+			ENCRYPT_ALGORITHM,
+			KEYLENGTH | CRYPT_EXPORTABLE,
+			&hKey);
+
+		if (!fStatus)
+		{
+			retval = GetErrorString(_T("CryptGenKey failed"));
+			break;
+		}
+		_tprintf(_T("CryptGenKey succeeded.\n"));
+
 		fStatus = CryptGetUserKey(
 			hProv, // HCRYPTPROV hProv,
 			AT_KEYEXCHANGE, // DWORD dwKeySpec,
-			&hKey // HCRYPTKEY* phUserKey
+			&hXchgKey // HCRYPTKEY* phUserKey
 		);
 
 		if (!fStatus)
@@ -300,13 +320,75 @@ std::string SCD_Crypto::encrypt_decrypt_test()
 			retval = GetErrorString(_T("CryptGetUserKey failed"));
 			break;
 		}
-
 		_tprintf(_T("CryptGetUserKey succeeded.\n"));
+/*
+		fStatus = CryptGetKeyParam(
+			hXchgKey, // HCRYPTKEY hXchgKey,
+			KP_CERTIFICATE, // DWORD dwParam,
+			NULL, // BYTE* pbData,
+			&dwCertLen, // DWORD* pdwDataLen,
+			0 // DWORD dwFlags
+		);
+
+		if (!fStatus)
+		{
+			retval = GetErrorString(_T("CryptGetKeyParam failed"));
+			break;
+		}
+
+		_tprintf(_T("CryptGetKeyParam Cert Length succeeded.\n"));
+		_tprintf(_T("dwCertLen: %u\n"), dwCertLen);
+*/
+		fStatus = CryptExportKey(
+			hKey,
+			hXchgKey,
+			SIMPLEBLOB,
+			0,
+			NULL,
+			&dwKeyBlobLen);
+
+		if (!fStatus)
+		{
+			retval = GetErrorString(_T("CryptExportKey failed"));
+			break;
+		}
+		_tprintf(_T("CryptExportKey succeeded: BLOB length %u\n"), dwKeyBlobLen);
+
+/*
+		//-----------------------------------------------------------
+		// Determine size of the key BLOB, and allocate memory.
+		if()
+		{
+			_tprintf(
+				TEXT("The key BLOB is %d bytes long. \n"),
+				dwKeyBlobLen);
+		}
+		else
+		{
+			MyHandleError(
+				TEXT("Error computing BLOB length! \n"),
+				GetLastError());
+			goto Exit_MyEncryptFile;
+		}
+
+		if(pbKeyBlob = (BYTE *)malloc(dwKeyBlobLen))
+		{
+			_tprintf(
+				TEXT("Memory is allocated for the key BLOB. \n"));
+		}
+		else
+		{
+			MyHandleError(TEXT("Out of memory. \n"), E_OUTOFMEMORY);
+			goto Exit_MyEncryptFile;
+		}
+
+*/
+
 
 	} while (FALSE);
 
 
-	if (hKey != 0) CryptDestroyKey(hKey);
+	if (hXchgKey != 0) CryptDestroyKey(hXchgKey);
 	if (hProv != 0) CryptReleaseContext(hProv, 0);
 
 	return retval;

@@ -30,8 +30,8 @@ int main()
 	_tprintf(_T("ATR %s\n"), code.c_str());
 
 	SCD_Crypto sc_crypto;
-	//std::string retval = sc_crypto.GetSC_RSAFull_certificate();
-	std::string retval = sc_crypto.encrypt_decrypt_test();
+	std::string retval = sc_crypto.GetSC_RSAFull_certificate();
+	//std::string retval = sc_crypto.encrypt_decrypt_test();
 	std::cout << retval;
 
 }
