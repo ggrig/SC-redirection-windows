@@ -20,5 +20,10 @@ public:
 
 	std::string GetSC_RSAFull_certificate();
 	std::string encrypt_decrypt_test();
+
+	bool SignMessage(CRYPT_DATA_BLOB *pSignedMessageBlob);
+	bool VerifySignedMessage(
+		CRYPT_DATA_BLOB *pSignedMessageBlob,
+		CRYPT_DATA_BLOB *pDecodedMessageBlob);
 };
 
