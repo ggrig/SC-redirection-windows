@@ -3,56 +3,39 @@
 
 #define MAX_CERT_SIMPLE_NAME_STR 1000
 
-void GetCSBackupAPIErrorMessage(DWORD dwErr, TCHAR * wszMsgBuff);
+std::string GetErrorString(LPCTSTR psz);
 
-// based on https://docs.microsoft.com/en-us/archive/blogs/winsdk/how-to-read-a-certificate-from-a-smart-card-and-add-it-to-the-system-store
-
-std::string GetErrorString(LPCTSTR psz)
+SCD_Crypto::SCD_Crypto()
 {
-	std::string retval = "ERROR: ";
-
-	TCHAR   errMsg[512];  // Buffer for text.
-
-	GetCSBackupAPIErrorMessage(GetLastError(), errMsg);
-
-	retval += psz;
-	retval += ": ";
-	retval += errMsg;
-
-	return retval;
+	memset(m_pContainer, 0, BUFFER_SIZE);
+	memset(m_pProviderName, 0, BUFFER_SIZE);
+	memset(m_szReader, 0, BUFFER_SIZE);
+	memset(m_szCard, 0, BUFFER_SIZE);
 }
-
 
 std::string SCD_Crypto::GetSC_RSAFull_certificate()
 {
+// based on https://docs.microsoft.com/en-us/archive/blogs/winsdk/how-to-read-a-certificate-from-a-smart-card-and-add-it-to-the-system-store
+
 	std::string retval;
 
 	HCRYPTPROV hProv = 0;
-	HCRYPTKEY hKey;
-	HCERTSTORE hStoreHandle = NULL;
+	HCRYPTKEY hKey = 0;
 	BOOL fStatus;
-	BOOL fSave = FALSE;
 	SCARDCONTEXT hSC;
 	OPENCARDNAME_EX dlgStruct;
 
-	TCHAR szReader[256];
-	TCHAR szCard[256];
-	TCHAR pProviderName[256];
 	LONG lReturn;
 	DWORD lStatus;
-	DWORD cchProvider = 256;
 	DWORD dwCertLen;
 	DWORD dwCertStringLen;
-	DWORD dwLogonCertsCount = 0;
-	DWORD dwHashLen = CERT_HASH_LENGTH;
 	BYTE* pCertBlob = NULL;
 	TCHAR * pCertString = NULL;
 	PCCERT_CONTEXT pCertContext = NULL;
 
-	CHAR pszName[1000];
-	DWORD cbName;
+	DWORD nParamLength = BUFFER_SIZE;
 
-	certificate.clear();
+	m_Certificate.clear();
 
 	// Establish a context.
 
@@ -78,10 +61,10 @@ do {
 	dlgStruct.dwStructSize = sizeof(dlgStruct);
 	dlgStruct.hSCardContext = hSC;
 	dlgStruct.dwFlags = SC_DLG_FORCE_UI;
-	dlgStruct.lpstrRdr = szReader;
-	dlgStruct.nMaxRdr = 256;
-	dlgStruct.lpstrCard = szCard;
-	dlgStruct.nMaxCard = 256;
+	dlgStruct.lpstrRdr = m_szReader;
+	dlgStruct.nMaxRdr = BUFFER_SIZE;
+	dlgStruct.lpstrCard = m_szCard;
+	dlgStruct.nMaxCard = BUFFER_SIZE;
 	dlgStruct.lpstrTitle = _T("My Select Card Title");
 
 	// Display the select card dialog box.
@@ -94,14 +77,15 @@ do {
 		retval = GetErrorString(_T("Failed SCardUIDlgSelectCard"));
 		break;
 	}
-	_tprintf(_T("Reader: %s\nCard: %s\n"), szReader, szCard);
+	_tprintf(_T("Reader: %s\nCard: %s\n"), m_szReader, m_szCard);
 
+	nParamLength = BUFFER_SIZE;
 	lStatus = SCardGetCardTypeProviderName(
 		dlgStruct.hSCardContext, // SCARDCONTEXT hContext,
 		dlgStruct.lpstrCard, // LPCTSTR szCardName,
 		SCARD_PROVIDER_CSP, // DWORD dwProviderId,
-		pProviderName, // LPTSTR szProvider,
-		&cchProvider // LPDWORD* pcchProvider
+		m_pProviderName, // LPTSTR szProvider,
+		&nParamLength // LPDWORD* pcchProvider
 	);
 
 	_tprintf(_T("SCardGetCardTypeProviderName returned: %u (a value of 0 is success)\n"), lStatus);
@@ -112,12 +96,12 @@ do {
 		retval = GetErrorString(_T("Failed SCardGetCardTypeProviderName"));
 		break;
 	}
-	_tprintf(_T("Provider name: %s.\n"), pProviderName);
+	_tprintf(_T("Provider name: %s.\n"), m_pProviderName);
 
 	fStatus = CryptAcquireContext(
 		&hProv, // HCRYPTPROV* phProv,
 		NULL, // LPCTSTR pszContainer,
-		pProviderName, // LPCTSTR pszProvider,
+		m_pProviderName, // LPCTSTR pszProvider,
 		PROV_RSA_FULL, // DWORD dwProvType,
 		CRYPT_VERIFYCONTEXT // DWORD dwFlags
 	);
@@ -131,32 +115,13 @@ do {
 	_tprintf(_T("CryptAcquireContext succeeded.\n"));
 
 	//---------------------------------------------------------------
-	// Read the name of the CSP.
-	cbName = 1000;
-	fStatus = CryptGetProvParam(
-		hProv,
-		PP_NAME,
-		(BYTE*)pszName,
-		&cbName,
-		0);
-
-	if (!fStatus)
-	{
-		retval = GetErrorString(TEXT("Error reading CSP name.\n"));
-		break;
-	}
-	_tprintf(TEXT("CryptGetProvParam succeeded.\n"));
-	printf("Provider name: %s\n", pszName);
-
-	//---------------------------------------------------------------
 	// Read the name of the key container.
-	cbName = 1000;
-
+	nParamLength = BUFFER_SIZE;
 	fStatus = CryptGetProvParam(
 		hProv,
 		PP_ENUMCONTAINERS,
-		(BYTE*)pszName,
-		&cbName,
+		(BYTE*)m_pContainer,
+		&nParamLength,
 		CRYPT_FIRST);
 
 	if (!fStatus)
@@ -165,15 +130,15 @@ do {
 		break;
 	}
 	_tprintf(TEXT("CryptGetProvParam succeeded.\n"));
-	printf("Key Container name: %s\n", pszName);
+	printf("Key Container name: %s\n", m_pContainer);
 
 	CryptReleaseContext(hProv, 0);
 	hProv = 0;
 
 	fStatus = CryptAcquireContext(
 		&hProv, // HCRYPTPROV* phProv,
-		pszName, // LPCTSTR pszContainer,
-		pProviderName, // LPCTSTR pszProvider,
+		m_pContainer, // LPCTSTR pszContainer,
+		m_pProviderName, // LPCTSTR pszProvider,
 		PROV_RSA_FULL, // DWORD dwProvType,
 		0 // DWORD dwFlags
 	);
@@ -275,11 +240,12 @@ do {
 	std::ofstream pemCertFile("cert.pem", std::ios::out | std::ios::binary);
 	pemCertFile.write((const char *)pCertString, dwCertStringLen);
 
-	certificate = pCertString;
+	m_Certificate = pCertString;
 	retval = pCertString;
 
 } while (FALSE);
 
+	if (hKey != 0) CryptDestroyKey(hKey);
 	if (hProv != 0) CryptReleaseContext(hProv, 0);
 	if (NULL != pCertBlob) free(pCertBlob);
 	if (NULL != pCertString) free(pCertString);
@@ -288,7 +254,60 @@ do {
 
 }
 
-BOOL SCD_Crypto::encrypt_decrypt_test()
+std::string SCD_Crypto::encrypt_decrypt_test()
 {
-	return 0;
+	std::string retval;
+	HCRYPTPROV hProv = 0;
+	HCRYPTKEY hKey = 0;
+	BOOL fStatus;
+
+	if (m_Certificate.empty())
+	{
+		retval = GetSC_RSAFull_certificate();
+
+		if (m_Certificate.empty())
+		{
+			return retval;
+		}
+
+		retval.clear();
+	}
+
+	do {
+		fStatus = CryptAcquireContext(
+			&hProv, // HCRYPTPROV* phProv,
+			m_pContainer, // LPCTSTR pszContainer,
+			m_pProviderName, // LPCTSTR pszProvider,
+			PROV_RSA_FULL, // DWORD dwProvType,
+			0 // DWORD dwFlags
+		);
+
+		if (!fStatus)
+		{
+			retval = GetErrorString(_T("CryptAcquireContext failed"));
+			break;
+		}
+		_tprintf(_T("CryptAcquireContext succeeded.\n"));
+
+		fStatus = CryptGetUserKey(
+			hProv, // HCRYPTPROV hProv,
+			AT_KEYEXCHANGE, // DWORD dwKeySpec,
+			&hKey // HCRYPTKEY* phUserKey
+		);
+
+		if (!fStatus)
+		{
+			retval = GetErrorString(_T("CryptGetUserKey failed"));
+			break;
+		}
+
+		_tprintf(_T("CryptGetUserKey succeeded.\n"));
+
+	} while (FALSE);
+
+
+	if (hKey != 0) CryptDestroyKey(hKey);
+	if (hProv != 0) CryptReleaseContext(hProv, 0);
+
+	return retval;
 }
