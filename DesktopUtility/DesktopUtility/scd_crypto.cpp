@@ -733,10 +733,10 @@ void MyHandleError(LPCTSTR psz)
 	_ftprintf(stderr, TEXT("Program terminating. \n"));
 } // End of MyHandleError
 
-bool SCD_Crypto::SignMessage(CRYPT_DATA_BLOB * pSignedMessageBlob, BOOL fDetachedSignature, BYTE* pbMessage)
+bool SCD_Crypto::SignMessage(CRYPT_DATA_BLOB * pSignedMessageBlob, BOOL fDetachedSignature, BYTE* pbMessage, DWORD cbMessage)
 {
 	bool fReturn = false;
-	DWORD cbMessage;
+	
 	HCERTSTORE hCertStore = NULL;
 	PCCERT_CONTEXT pSignerCert = NULL;
 	CRYPT_SIGN_MESSAGE_PARA  SigParams;
@@ -749,11 +749,6 @@ bool SCD_Crypto::SignMessage(CRYPT_DATA_BLOB * pSignedMessageBlob, BOOL fDetache
 
 	HCERTSTORE hPFXtoStore = 0;
 	DWORD dwImportFlags = CRYPT_EXPORTABLE | CRYPT_USER_KEYSET | PKCS12_NO_PERSIST_KEY;
-
-	// Calculate the size of message. To include the 
-	// terminating null character, the length is one more byte 
-	// than the length returned by the strlen function.
-	cbMessage = (lstrlen((TCHAR*)pbMessage) + 1) * sizeof(TCHAR);
 
 	// Create the MessageArray and the MessageSizeArray.
 	const BYTE* MessageArray[] = { pbMessage };
@@ -985,7 +980,7 @@ exit_VerifySignedMessage:
 	return fReturn;
 }
 
-BOOL SCD_Crypto::getFromFile(CRYPT_DATA_BLOB * pBryptBlob, const CHAR * pFileName)
+BOOL SCD_Crypto::getBlobFromFile(CRYPT_DATA_BLOB * pBryptBlob, const CHAR * pFileName)
 {
 	BOOL retval = TRUE;
 
@@ -1028,6 +1023,14 @@ BOOL SCD_Crypto::getFromFile(CRYPT_DATA_BLOB * pBryptBlob, const CHAR * pFileNam
 	return retval;
 }
 
+BOOL SCD_Crypto::saveBlobToFile(CRYPT_DATA_BLOB * pBlob, const CHAR * pFileName)
+{
+	std::ofstream fileStream(pFileName, std::ios::out | std::ios::binary);
+	fileStream.write((const char *)pBlob->pbData, pBlob->cbData);
+
+	return 0;
+}
+
 BOOL SCD_Crypto::Import_SelfSigned_RSAFull_certificate()
 {
 	BOOL retval = TRUE;
@@ -1037,7 +1040,7 @@ BOOL SCD_Crypto::Import_SelfSigned_RSAFull_certificate()
 
 	do {
 
-		if (!getFromFile(&m_pfxBlob, PFX_FILE_NAME))
+		if (!getBlobFromFile(&m_pfxBlob, PFX_FILE_NAME))
 		{
 			retval = FALSE;
 			break;

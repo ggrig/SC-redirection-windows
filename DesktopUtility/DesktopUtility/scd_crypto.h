@@ -20,7 +20,7 @@ class SCD_Crypto
 		if (m_pfxBlob.pbData) delete[] m_pfxBlob.pbData;
 		m_pfxBlob = { 0 };
 	}
-	BOOL getFromFile(CRYPT_DATA_BLOB *, const CHAR *);
+	BOOL getBlobFromFile(CRYPT_DATA_BLOB *, const CHAR *);
 	BOOL Import_SelfSigned_RSAFull_certificate();
 public:
 	SCD_Crypto();
@@ -34,9 +34,10 @@ public:
 	std::string Get_SmartCard_RSAFull_certificate();
 	int Export_SelfSigned_RSAFull_certificate();
 
-	bool SignMessage(CRYPT_DATA_BLOB *pSignedMessageBlob, BOOL fDetachedSignature, BYTE* pbMessage);
+	bool SignMessage(CRYPT_DATA_BLOB *pSignedMessageBlob, BOOL fDetachedSignature, BYTE* pbMessage, DWORD cbMessage);
 	bool VerifySignedMessage(
 		CRYPT_DATA_BLOB *pSignedMessageBlob,
 		CRYPT_DATA_BLOB *pDecodedMessageBlob);
+	BOOL saveBlobToFile(CRYPT_DATA_BLOB * pBlob, const CHAR * pFileName);
 };
 

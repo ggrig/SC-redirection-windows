@@ -46,8 +46,13 @@ int main()
 	BYTE* pbMessage =
 		(BYTE*)TEXT("CryptoAPI is a good way to handle security");
 
+	// Calculate the size of message. To include the 
+	// terminating null character, the length is one more byte 
+	// than the length returned by the strlen function.
+	DWORD cbMessage = (lstrlen((TCHAR*)pbMessage) + 1) * sizeof(TCHAR);
 
-	if (sc_crypto.SignMessage(&SignedMessage, FALSE, pbMessage))
+
+	if (sc_crypto.SignMessage(&SignedMessage, FALSE, pbMessage, cbMessage))
 	{
 		CRYPT_DATA_BLOB DecodedMessage;
 
@@ -58,6 +63,16 @@ int main()
 
 		free(SignedMessage.pbData);
 	}
+
+	if (sc_crypto.SignMessage(&SignedMessage, TRUE, pbMessage, cbMessage))
+	{
+		CRYPT_DATA_BLOB message = { 0 };
+		message.pbData = pbMessage;
+		message.cbData = cbMessage;
+		sc_crypto.saveBlobToFile(&message, "msg");
+		sc_crypto.saveBlobToFile(&SignedMessage, "msg.sign");
+	}
+
 
 	_tprintf(TEXT("Press any key to exit."));
 	_getch();
