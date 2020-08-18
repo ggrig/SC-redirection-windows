@@ -27,5 +27,6 @@ public:
 	bool VerifySignedMessage(
 		CRYPT_DATA_BLOB *pSignedMessageBlob,
 		CRYPT_DATA_BLOB *pDecodedMessageBlob);
+	HCERTSTORE Import_SelfSigned_RSAFull_certificate();
 };
 

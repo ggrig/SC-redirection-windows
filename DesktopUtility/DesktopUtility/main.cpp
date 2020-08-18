@@ -53,10 +53,12 @@ int main()
 	}
 */
 
-	std::string retval = sc_crypto.Get_SelfSigned_RSAFull_certificate();
-	std::cout << retval;
+	//std::string retval = sc_crypto.Get_SelfSigned_RSAFull_certificate();
+	//std::cout << retval;
 
 	//sc_crypto.Export_SelfSigned_RSAFull_certificate();
+
+	sc_crypto.Import_SelfSigned_RSAFull_certificate();
 
 	_tprintf(TEXT("Press any key to exit."));
 	_getch();

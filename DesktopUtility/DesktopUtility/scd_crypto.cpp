@@ -992,6 +992,102 @@ exit_VerifySignedMessage:
 	return fReturn;
 }
 
+#define PFX_FILE_NAME L"mysite.local.pfx"
+#define PFX_FILE_PSW L"123456789"
+
+HCERTSTORE SCD_Crypto::Import_SelfSigned_RSAFull_certificate()
+{
+	BOOL retval = TRUE;
+	HCERTSTORE hPFXtoStore = 0;
+
+	_CRYPTOAPI_BLOB pfxBlob = { 0 };
+
+	do {
+		std::ifstream pfx_file(PFX_FILE_NAME, std::ifstream::binary);
+
+		if (!pfx_file)
+		{
+			_tprintf(_T("The PFX file \"%ls\" not found"), PFX_FILE_NAME);
+			retval = FALSE;
+			break;
+		}
+
+		pfx_file.seekg(0, pfx_file.end);
+		pfxBlob.cbData = pfx_file.tellg();
+		pfx_file.seekg(0, pfx_file.beg);
+
+		pfxBlob.pbData = new BYTE[pfxBlob.cbData];
+
+		std::cout << "Reading " << pfxBlob.cbData << " characters... ";
+		// read data as a block:
+		pfx_file.read((CHAR *)pfxBlob.pbData, pfxBlob.cbData);
+
+		retval != pfx_file.fail();
+		pfx_file.close();
+
+		if (!retval)
+		{
+			_tprintf(_T("Failed to read the content of the PFX file  \"%ls\" "), PFX_FILE_NAME);
+			retval = FALSE;
+			break;
+		}
+
+		if (FALSE == PFXIsPFXBlob(&pfxBlob))  // Check to see if it is a blob
+		{
+			_tprintf(_T("The file \"%ls\" is not a PFX container"), PFX_FILE_NAME);
+			retval = FALSE;
+			break;
+		}
+
+		DWORD dwImportFlags = CRYPT_EXPORTABLE | CRYPT_USER_KEYSET | PKCS12_NO_PERSIST_KEY;
+
+		hPFXtoStore = PFXImportCertStore(&pfxBlob, PFX_FILE_PSW, dwImportFlags);
+		if (hPFXtoStore == NULL) 
+		{
+			std::cout << GetErrorString(_T("\nPFXImportCertStore failed"));
+			retval = FALSE;
+			break;
+		}
+
+		_tprintf(_T("\nImport successful\n"));
+
+		// Find the certificate in P12 file (we expect there is only one)    
+		PCCERT_CONTEXT hContext = CertFindCertificateInStore (hPFXtoStore, X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, 0, CERT_FIND_ANY, NULL, NULL);
+
+		const char szBuffToSign[] = "Hello world!";
+		DWORD dwSize = 0;
+
+		CRYPT_SIGN_MESSAGE_PARA p;
+		memset(&p, 0, sizeof(CRYPT_SIGN_MESSAGE_PARA));
+		p.cbSize = sizeof(CRYPT_SIGN_MESSAGE_PARA);
+		p.dwMsgEncodingType = PKCS_7_ASN_ENCODING | X509_ASN_ENCODING;
+		p.pSigningCert = hContext;
+		p.HashAlgorithm.pszObjId = (LPSTR)szOID_RSA_SHA256RSA;
+		p.cMsgCert = 1;
+		p.rgpMsgCert = &hContext;
+
+		DWORD dwSizes[] = {
+							strlen(szBuffToSign)
+		};
+
+		const BYTE *byMessageArray[] = {
+							(const BYTE *)szBuffToSign
+		};
+
+		retval = CryptSignMessage(&p, FALSE, 1, byMessageArray, dwSizes, NULL, &dwSize);
+
+		BYTE *pBuff = (BYTE *)malloc(dwSize);
+		memset(pBuff, 0, dwSize);
+		retval = CryptSignMessage(&p, FALSE, 1, byMessageArray, dwSizes, pBuff, &dwSize);
+
+
+	} while (FALSE);
+
+	if (pfxBlob.pbData) delete[] pfxBlob.pbData;
+
+	return hPFXtoStore;
+}
+
 // https://groups.google.com/forum/#!topic/microsoft.public.platformsdk.security/Q4xmlRRug-0
 
 int SCD_Crypto::Export_SelfSigned_RSAFull_certificate()
