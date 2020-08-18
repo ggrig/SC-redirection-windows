@@ -40,19 +40,23 @@ int main()
 
 	CRYPT_DATA_BLOB SignedMessage;
 
-	if (sc_crypto.Import_SelfSigned_RSAFull_certificate())
+	// The message to be signed.
+	// Usually, the message exists somewhere and a pointer is
+	// passed to the application.
+	BYTE* pbMessage =
+		(BYTE*)TEXT("CryptoAPI is a good way to handle security");
+
+
+	if (sc_crypto.SignMessage(&SignedMessage, FALSE, pbMessage))
 	{
-		if (sc_crypto.SignMessage(&SignedMessage))
+		CRYPT_DATA_BLOB DecodedMessage;
+
+		if (sc_crypto.VerifySignedMessage(&SignedMessage, &DecodedMessage))
 		{
-			CRYPT_DATA_BLOB DecodedMessage;
-
-			if (sc_crypto.VerifySignedMessage(&SignedMessage, &DecodedMessage))
-			{
-				free(DecodedMessage.pbData);
-			}
-
-			free(SignedMessage.pbData);
+			free(DecodedMessage.pbData);
 		}
+
+		free(SignedMessage.pbData);
 	}
 
 	_tprintf(TEXT("Press any key to exit."));

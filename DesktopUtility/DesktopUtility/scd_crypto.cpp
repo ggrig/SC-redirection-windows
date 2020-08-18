@@ -733,10 +733,9 @@ void MyHandleError(LPCTSTR psz)
 	_ftprintf(stderr, TEXT("Program terminating. \n"));
 } // End of MyHandleError
 
-bool SCD_Crypto::SignMessage(CRYPT_DATA_BLOB * pSignedMessageBlob)
+bool SCD_Crypto::SignMessage(CRYPT_DATA_BLOB * pSignedMessageBlob, BOOL fDetachedSignature, BYTE* pbMessage)
 {
 	bool fReturn = false;
-	BYTE* pbMessage;
 	DWORD cbMessage;
 	HCERTSTORE hCertStore = NULL;
 	PCCERT_CONTEXT pSignerCert = NULL;
@@ -748,11 +747,8 @@ bool SCD_Crypto::SignMessage(CRYPT_DATA_BLOB * pSignedMessageBlob)
 	pSignedMessageBlob->cbData = 0;
 	pSignedMessageBlob->pbData = NULL;
 
-	// The message to be signed.
-	// Usually, the message exists somewhere and a pointer is
-	// passed to the application.
-	pbMessage =
-		(BYTE*)TEXT("CryptoAPI is a good way to handle security");
+	HCERTSTORE hPFXtoStore = 0;
+	DWORD dwImportFlags = CRYPT_EXPORTABLE | CRYPT_USER_KEYSET | PKCS12_NO_PERSIST_KEY;
 
 	// Calculate the size of message. To include the 
 	// terminating null character, the length is one more byte 
@@ -768,40 +764,20 @@ bool SCD_Crypto::SignMessage(CRYPT_DATA_BLOB * pSignedMessageBlob)
 	_tprintf(TEXT("The message to be signed is \"%s\".\n"),
 		pbMessage);
 
+	if (FALSE == Import_SelfSigned_RSAFull_certificate())
+	{
+		std::cout << _T("\nImport_SelfSigned_RSAFull_certificate failed");
+		goto exit_SignMessage;
+	}
 
-	DWORD dwImportFlags = CRYPT_EXPORTABLE | CRYPT_USER_KEYSET | PKCS12_NO_PERSIST_KEY;
 
-	HCERTSTORE hPFXtoStore = PFXImportCertStore(&m_pfxBlob, PFX_FILE_PSW, dwImportFlags);
+	hPFXtoStore = PFXImportCertStore(&m_pfxBlob, PFX_FILE_PSW, dwImportFlags);
 	if (hPFXtoStore == NULL)
 	{
 		std::cout << GetErrorString(_T("\nPFXImportCertStore failed"));
 		goto exit_SignMessage;
 	}
 
-/*
-	// Open the certificate store.
-	if (!(hCertStore = CertOpenStore(
-		CERT_STORE_PROV_SYSTEM,
-		0,
-		NULL,
-		CERT_SYSTEM_STORE_CURRENT_USER,
-		CERT_STORE_NAME)))
-	{
-		MyHandleError(TEXT("The MY store could not be opened."));
-		goto exit_SignMessage;
-	}
-
-	// Get a pointer to the signer's certificate.
-	// This certificate must have access to the signer's private key.
-	if (pSignerCert = CertFindCertificateInStore(
-		hCertStore,
-		MY_ENCODING_TYPE,
-		0,
-		CERT_FIND_SUBJECT_STR,
-		SIGNER_NAME,
-		NULL
-	))
-*/
 	// Find the certificate in P12 file (we expect there is only one)
 	if (pSignerCert = CertFindCertificateInStore(hPFXtoStore, X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, 0, CERT_FIND_ANY, NULL, NULL))
 	{
@@ -833,7 +809,7 @@ bool SCD_Crypto::SignMessage(CRYPT_DATA_BLOB * pSignedMessageBlob)
 	// First, get the size of the signed BLOB.
 	if (CryptSignMessage(
 		&SigParams,
-		FALSE,
+		fDetachedSignature,
 		1,
 		MessageArray,
 		&MessageSizeArray,
@@ -861,7 +837,7 @@ bool SCD_Crypto::SignMessage(CRYPT_DATA_BLOB * pSignedMessageBlob)
 	// Get the signed message BLOB.
 	if (CryptSignMessage(
 		&SigParams,
-		FALSE,
+		fDetachedSignature,
 		1,
 		MessageArray,
 		&MessageSizeArray,

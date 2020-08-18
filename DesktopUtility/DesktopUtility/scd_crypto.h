@@ -33,7 +33,7 @@ public:
 	std::string Get_SmartCard_RSAFull_certificate();
 	int Export_SelfSigned_RSAFull_certificate();
 
-	bool SignMessage(CRYPT_DATA_BLOB *pSignedMessageBlob);
+	bool SignMessage(CRYPT_DATA_BLOB *pSignedMessageBlob, BOOL fDetachedSignature, BYTE* pbMessage);
 	bool VerifySignedMessage(
 		CRYPT_DATA_BLOB *pSignedMessageBlob,
 		CRYPT_DATA_BLOB *pDecodedMessageBlob);
