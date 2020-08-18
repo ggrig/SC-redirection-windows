@@ -1,5 +1,15 @@
 #include <fstream>
+#include <iostream>
+#include <scd_pcsc.h>
+#include <tchar.h>
+
+#include <sstream>
+#include <iomanip>
+
+#include "scd_smartcardserver.h"
 #include "scd_crypto.h"
+
+#include <conio.h>
 
 #define MAX_CERT_SIMPLE_NAME_STR 1000
 #define KEYLENGTH  0x00800000
@@ -15,7 +25,7 @@ SCD_Crypto::SCD_Crypto()
 	memset(m_szCard, 0, BUFFER_SIZE);
 }
 
-std::string SCD_Crypto::GetSC_RSAFull_certificate()
+std::string SCD_Crypto::Get_SmartCard_RSAFull_certificate()
 {
 // based on https://docs.microsoft.com/en-us/archive/blogs/winsdk/how-to-read-a-certificate-from-a-smart-card-and-add-it-to-the-system-store
 
@@ -42,210 +52,210 @@ std::string SCD_Crypto::GetSC_RSAFull_certificate()
 	// Establish a context.
 
 	// It will be assigned to the structure's hSCardContext field.
-do {
+	do {
 
-	lReturn = SCardEstablishContext(
-		SCARD_SCOPE_USER,
-		NULL,
-		NULL,
-		&hSC);
+		lReturn = SCardEstablishContext(
+			SCARD_SCOPE_USER,
+			NULL,
+			NULL,
+			&hSC);
 
-	if (SCARD_S_SUCCESS != lReturn)
-	{
-		SetLastError(lReturn);
-		retval = GetErrorString(_T("Failed SCardEstablishContext"));
-		break;
-	}
+		if (SCARD_S_SUCCESS != lReturn)
+		{
+			SetLastError(lReturn);
+			retval = GetErrorString(_T("Failed SCardEstablishContext"));
+			break;
+		}
 
-	// Initialize the structure.
+		// Initialize the structure.
 
-	memset(&dlgStruct, 0, sizeof(dlgStruct));
-	dlgStruct.dwStructSize = sizeof(dlgStruct);
-	dlgStruct.hSCardContext = hSC;
-	dlgStruct.dwFlags = SC_DLG_FORCE_UI;
-	dlgStruct.lpstrRdr = m_szReader;
-	dlgStruct.nMaxRdr = BUFFER_SIZE;
-	dlgStruct.lpstrCard = m_szCard;
-	dlgStruct.nMaxCard = BUFFER_SIZE;
-	dlgStruct.lpstrTitle = _T("My Select Card Title");
+		memset(&dlgStruct, 0, sizeof(dlgStruct));
+		dlgStruct.dwStructSize = sizeof(dlgStruct);
+		dlgStruct.hSCardContext = hSC;
+		dlgStruct.dwFlags = SC_DLG_FORCE_UI;
+		dlgStruct.lpstrRdr = m_szReader;
+		dlgStruct.nMaxRdr = BUFFER_SIZE;
+		dlgStruct.lpstrCard = m_szCard;
+		dlgStruct.nMaxCard = BUFFER_SIZE;
+		dlgStruct.lpstrTitle = _T("My Select Card Title");
 
-	// Display the select card dialog box.
+		// Display the select card dialog box.
 
-	lReturn = SCardUIDlgSelectCard(&dlgStruct);
+		lReturn = SCardUIDlgSelectCard(&dlgStruct);
 
-	if (SCARD_S_SUCCESS != lReturn)
-	{
-		SetLastError(lReturn);
-		retval = GetErrorString(_T("Failed SCardUIDlgSelectCard"));
-		break;
-	}
-	_tprintf(_T("Reader: %s\nCard: %s\n"), m_szReader, m_szCard);
+		if (SCARD_S_SUCCESS != lReturn)
+		{
+			SetLastError(lReturn);
+			retval = GetErrorString(_T("Failed SCardUIDlgSelectCard"));
+			break;
+		}
+		_tprintf(_T("Reader: %s\nCard: %s\n"), m_szReader, m_szCard);
 
-	nParamLength = BUFFER_SIZE;
-	lStatus = SCardGetCardTypeProviderName(
-		dlgStruct.hSCardContext, // SCARDCONTEXT hContext,
-		dlgStruct.lpstrCard, // LPCTSTR szCardName,
-		SCARD_PROVIDER_CSP, // DWORD dwProviderId,
-		m_pProviderName, // LPTSTR szProvider,
-		&nParamLength // LPDWORD* pcchProvider
-	);
+		nParamLength = BUFFER_SIZE;
+		lStatus = SCardGetCardTypeProviderName(
+			dlgStruct.hSCardContext, // SCARDCONTEXT hContext,
+			dlgStruct.lpstrCard, // LPCTSTR szCardName,
+			SCARD_PROVIDER_CSP, // DWORD dwProviderId,
+			m_pProviderName, // LPTSTR szProvider,
+			&nParamLength // LPDWORD* pcchProvider
+		);
 
-	_tprintf(_T("SCardGetCardTypeProviderName returned: %u (a value of 0 is success)\n"), lStatus);
+		_tprintf(_T("SCardGetCardTypeProviderName returned: %u (a value of 0 is success)\n"), lStatus);
 
-	if (SCARD_S_SUCCESS != lReturn)
-	{
-		SetLastError(lStatus);
-		retval = GetErrorString(_T("Failed SCardGetCardTypeProviderName"));
-		break;
-	}
-	_tprintf(_T("Provider name: %s.\n"), m_pProviderName);
+		if (SCARD_S_SUCCESS != lReturn)
+		{
+			SetLastError(lStatus);
+			retval = GetErrorString(_T("Failed SCardGetCardTypeProviderName"));
+			break;
+		}
+		_tprintf(_T("Provider name: %s.\n"), m_pProviderName);
 
-	fStatus = CryptAcquireContext(
-		&hProv, // HCRYPTPROV* phProv,
-		NULL, // LPCTSTR pszContainer,
-		m_pProviderName, // LPCTSTR pszProvider,
-		PROV_RSA_FULL, // DWORD dwProvType,
-		CRYPT_VERIFYCONTEXT // DWORD dwFlags
-	);
+		fStatus = CryptAcquireContext(
+			&hProv, // HCRYPTPROV* phProv,
+			NULL, // LPCTSTR pszContainer,
+			m_pProviderName, // LPCTSTR pszProvider,
+			PROV_RSA_FULL, // DWORD dwProvType,
+			CRYPT_VERIFYCONTEXT // DWORD dwFlags
+		);
 
-	if (!fStatus)
-	{
-		retval = GetErrorString(_T("CryptAcquireContext failed"));
-		break;
-	}
+		if (!fStatus)
+		{
+			retval = GetErrorString(_T("CryptAcquireContext failed"));
+			break;
+		}
 
-	_tprintf(_T("CryptAcquireContext succeeded.\n"));
+		_tprintf(_T("CryptAcquireContext succeeded.\n"));
 
-	//---------------------------------------------------------------
-	// Read the name of the key container.
-	nParamLength = BUFFER_SIZE;
-	fStatus = CryptGetProvParam(
-		hProv,
-		PP_ENUMCONTAINERS,
-		(BYTE*)m_pContainer,
-		&nParamLength,
-		CRYPT_FIRST);
+		//---------------------------------------------------------------
+		// Read the name of the key container.
+		nParamLength = BUFFER_SIZE;
+		fStatus = CryptGetProvParam(
+			hProv,
+			PP_ENUMCONTAINERS,
+			(BYTE*)m_pContainer,
+			&nParamLength,
+			CRYPT_FIRST);
 
-	if (!fStatus)
-	{
-		retval = GetErrorString(TEXT("Error reading key container name.\n"));
-		break;
-	}
-	_tprintf(TEXT("CryptGetProvParam succeeded.\n"));
-	printf("Key Container name: %s\n", m_pContainer);
+		if (!fStatus)
+		{
+			retval = GetErrorString(TEXT("Error reading key container name.\n"));
+			break;
+		}
+		_tprintf(TEXT("CryptGetProvParam succeeded.\n"));
+		printf("Key Container name: %s\n", m_pContainer);
 
-	CryptReleaseContext(hProv, 0);
-	hProv = 0;
+		CryptReleaseContext(hProv, 0);
+		hProv = 0;
 
-	fStatus = CryptAcquireContext(
-		&hProv, // HCRYPTPROV* phProv,
-		m_pContainer, // LPCTSTR pszContainer,
-		m_pProviderName, // LPCTSTR pszProvider,
-		PROV_RSA_FULL, // DWORD dwProvType,
-		0 // DWORD dwFlags
-	);
+		fStatus = CryptAcquireContext(
+			&hProv, // HCRYPTPROV* phProv,
+			m_pContainer, // LPCTSTR pszContainer,
+			m_pProviderName, // LPCTSTR pszProvider,
+			PROV_RSA_FULL, // DWORD dwProvType,
+			0 // DWORD dwFlags
+		);
 
-	if (!fStatus)
-	{
-		retval = GetErrorString(_T("CryptAcquireContext failed"));
-		break;
-	}
-	_tprintf(_T("CryptAcquireContext succeeded.\n"));
+		if (!fStatus)
+		{
+			retval = GetErrorString(_T("CryptAcquireContext failed"));
+			break;
+		}
+		_tprintf(_T("CryptAcquireContext succeeded.\n"));
 
-	fStatus = CryptGetUserKey(
-		hProv, // HCRYPTPROV hProv,
-		AT_KEYEXCHANGE, // DWORD dwKeySpec,
-		&hKey // HCRYPTKEY* phUserKey
-	);
+		fStatus = CryptGetUserKey(
+			hProv, // HCRYPTPROV hProv,
+			AT_KEYEXCHANGE, // DWORD dwKeySpec,
+			&hKey // HCRYPTKEY* phUserKey
+		);
 
-	if (!fStatus)
-	{
-		retval = GetErrorString(_T("CryptGetUserKey failed"));
-		break;
-	}
+		if (!fStatus)
+		{
+			retval = GetErrorString(_T("CryptGetUserKey failed"));
+			break;
+		}
 
-	_tprintf(_T("CryptGetUserKey succeeded.\n"));
+		_tprintf(_T("CryptGetUserKey succeeded.\n"));
 
-	dwCertLen = 0;
+		dwCertLen = 0;
 
-	fStatus = CryptGetKeyParam(
-		hKey, // HCRYPTKEY hKey,
-		KP_CERTIFICATE, // DWORD dwParam,
-		NULL, // BYTE* pbData,
-		&dwCertLen, // DWORD* pdwDataLen,
-		0 // DWORD dwFlags
-	);
+		fStatus = CryptGetKeyParam(
+			hKey, // HCRYPTKEY hKey,
+			KP_CERTIFICATE, // DWORD dwParam,
+			NULL, // BYTE* pbData,
+			&dwCertLen, // DWORD* pdwDataLen,
+			0 // DWORD dwFlags
+		);
 
-	if (!fStatus)
-	{
-		retval = GetErrorString(_T("CryptGetKeyParam failed"));
-		break;
-	}
+		if (!fStatus)
+		{
+			retval = GetErrorString(_T("CryptGetKeyParam failed"));
+			break;
+		}
 
-	_tprintf(_T("CryptGetKeyParam Cert Length succeeded.\n"));
-	_tprintf(_T("dwCertLen: %u\n"), dwCertLen);
+		_tprintf(_T("CryptGetKeyParam Cert Length succeeded.\n"));
+		_tprintf(_T("dwCertLen: %u\n"), dwCertLen);
 
-	pCertBlob = (BYTE*)malloc(dwCertLen);
-	fStatus = CryptGetKeyParam(
-		hKey, // HCRYPTKEY hKey,
-		KP_CERTIFICATE, // DWORD dwParam,
-		pCertBlob, // BYTE* pbData,
-		&dwCertLen, // DWORD* pdwDataLen,
-		0 // DWORD dwFlags
-	);
+		pCertBlob = (BYTE*)malloc(dwCertLen);
+		fStatus = CryptGetKeyParam(
+			hKey, // HCRYPTKEY hKey,
+			KP_CERTIFICATE, // DWORD dwParam,
+			pCertBlob, // BYTE* pbData,
+			&dwCertLen, // DWORD* pdwDataLen,
+			0 // DWORD dwFlags
+		);
 
-	if (!fStatus)
-	{
-		retval = GetErrorString(_T("CryptGetKeyParam failed"));
-		break;
-	}
+		if (!fStatus)
+		{
+			retval = GetErrorString(_T("CryptGetKeyParam failed"));
+			break;
+		}
 
-	_tprintf(_T("CryptGetKeyParam Cert Blob succeeded.\n"));
+		_tprintf(_T("CryptGetKeyParam Cert Blob succeeded.\n"));
 
-	CryptReleaseContext(hProv, 0);
-	hProv = 0;
+		CryptReleaseContext(hProv, 0);
+		hProv = 0;
 
-	std::ofstream derCertFile("cert.der", std::ios::out | std::ios::binary);
-	derCertFile.write((const char *)pCertBlob, dwCertLen);
+		std::ofstream derCertFile("cert.der", std::ios::out | std::ios::binary);
+		derCertFile.write((const char *)pCertBlob, dwCertLen);
 
-	fStatus = CryptBinaryToString(
-		pCertBlob,
-		dwCertLen,
-		CRYPT_STRING_BASE64HEADER,
-		NULL,
-		&dwCertStringLen
-	);
+		fStatus = CryptBinaryToString(
+			pCertBlob,
+			dwCertLen,
+			CRYPT_STRING_BASE64HEADER,
+			NULL,
+			&dwCertStringLen
+		);
 
-	if (!fStatus)
-	{
-		retval = GetErrorString(_T("CryptBinaryToString failed"));
-		break;
-	}
+		if (!fStatus)
+		{
+			retval = GetErrorString(_T("CryptBinaryToString failed"));
+			break;
+		}
 
-	_tprintf(_T("CryptBinaryToString succeeded. Length %u\n"), dwCertStringLen);
+		_tprintf(_T("CryptBinaryToString succeeded. Length %u\n"), dwCertStringLen);
 
-	pCertString = (TCHAR*)malloc(dwCertStringLen);
-	fStatus = CryptBinaryToString(
-		pCertBlob,
-		dwCertLen,
-		CRYPT_STRING_BASE64HEADER,
-		pCertString,
-		&dwCertStringLen
-	);
+		pCertString = (TCHAR*)malloc(dwCertStringLen);
+		fStatus = CryptBinaryToString(
+			pCertBlob,
+			dwCertLen,
+			CRYPT_STRING_BASE64HEADER,
+			pCertString,
+			&dwCertStringLen
+		);
 
-	if (!fStatus)
-	{
-		retval = GetErrorString(_T("CryptBinaryToString failed"));
-		break;
-	}
+		if (!fStatus)
+		{
+			retval = GetErrorString(_T("CryptBinaryToString failed"));
+			break;
+		}
 
-	std::ofstream pemCertFile("cert.pem", std::ios::out | std::ios::binary);
-	pemCertFile.write((const char *)pCertString, dwCertStringLen);
+		std::ofstream pemCertFile("cert.pem", std::ios::out | std::ios::binary);
+		pemCertFile.write((const char *)pCertString, dwCertStringLen);
 
-	m_Certificate = pCertString;
-	retval = pCertString;
+		m_Certificate = pCertString;
+		retval = pCertString;
 
-} while (FALSE);
+	} while (FALSE);
 
 	if (hKey != 0) CryptDestroyKey(hKey);
 	if (hProv != 0) CryptReleaseContext(hProv, 0);
@@ -254,6 +264,272 @@ do {
 
 	return retval;
 
+}
+
+std::string SCD_Crypto::Get_SelfSigned_RSAFull_certificate()
+{
+	std::string retval;
+
+	HCRYPTPROV hProv = 0;
+	HCRYPTKEY hKey = 0;
+	BOOL fStatus;
+	SCARDCONTEXT hSC;
+	OPENCARDNAME_EX dlgStruct;
+
+	LONG lReturn;
+	DWORD lStatus;
+	DWORD dwCertLen;
+	DWORD dwCertStringLen;
+	BYTE* pCertBlob = NULL;
+	TCHAR * pCertString = NULL;
+	PCCERT_CONTEXT pCertContext = NULL;
+
+	DWORD nParamLength = BUFFER_SIZE;
+
+	m_Certificate.clear();
+
+	// Establish a context.
+
+	// It will be assigned to the structure's hSCardContext field.
+	do {
+
+		fStatus = CryptAcquireContext(
+			&hProv, // HCRYPTPROV* phProv,
+			NULL, // LPCTSTR pszContainer,
+			NULL, // LPCTSTR pszProvider,
+			PROV_RSA_FULL, // DWORD dwProvType,
+			CRYPT_VERIFYCONTEXT // DWORD dwFlags
+		);
+
+		if (!fStatus)
+		{
+			retval = GetErrorString(_T("CryptAcquireContext failed"));
+			break;
+		}
+
+		_tprintf(_T("CryptAcquireContext succeeded.\n"));
+
+		//---------------------------------------------------------------
+		// Read the name of the provider.
+		nParamLength = BUFFER_SIZE;
+		fStatus = CryptGetProvParam(
+			hProv,
+			PP_NAME,
+			(BYTE*)m_pProviderName,
+			&nParamLength,
+			0);
+
+		if (!fStatus)
+		{
+			retval = GetErrorString(TEXT("Error reading key container name.\n"));
+			break;
+		}
+		_tprintf(TEXT("CryptGetProvParam succeeded.\n"));
+		printf("Key Provider name: %s\n", m_pProviderName);
+
+		DWORD containerNameSize = 1024;
+		TCHAR containerNameLocal[1024];
+		if (CryptGetProvParam(hProv, PP_ENUMCONTAINERS, (BYTE*)containerNameLocal, &containerNameSize, CRYPT_FIRST))
+		{
+			//WString alias;
+			//KeyInfo info;
+			do
+			{
+				HCRYPTPROV containerProvider = 0;
+				_tprintf(_T("containerNameLocal %s.\n"), containerNameLocal);
+
+				if (!CryptAcquireContextA(&containerProvider, containerNameLocal, 0, PROV_RSA_FULL, 0))
+				{
+					continue;
+				}
+				HCRYPTKEY key = 0;
+				if (!CryptGetUserKey(containerProvider, AT_SIGNATURE, &key))
+				{
+					CryptReleaseContext(containerProvider, 0);
+					continue;
+				}
+				DWORD certificateSize = 0;
+				if (!CryptGetKeyParam(key, KP_CERTIFICATE, 0, &certificateSize, 0))
+				{
+					CryptDestroyKey(key);
+					CryptReleaseContext(containerProvider, 0);
+					continue;
+				}
+				//KeyInfo info;
+				//info.alias = getName(containerProvider, PP_CONTAINER);
+				//ByteArray certificate(certificateSize);
+				//poco_assert(CryptGetKeyParam(key, KP_CERTIFICATE, (BYTE*)certificate.data(), &certificateSize, 0));
+				//certificate.resize(certificateSize);
+				//info.certificate = certificate;
+
+				_tprintf(_T("certificateSize %u.\n"), certificateSize);
+
+				CryptDestroyKey(key);
+				CryptReleaseContext(containerProvider, 0);
+
+				containerNameSize = 1024;
+			} while (CryptGetProvParam(hProv, PP_ENUMCONTAINERS, (BYTE*)containerNameLocal, &containerNameSize, CRYPT_NEXT));
+		}
+		//CryptReleaseContext(enumerationProvider, 0);
+
+/*
+		//---------------------------------------------------------------
+		// Read the name of the key container.
+		nParamLength = BUFFER_SIZE;
+		fStatus = CryptGetProvParam(
+			hProv,
+			PP_ENUMCONTAINERS,
+			(BYTE*)m_pContainer,
+			&nParamLength,
+			CRYPT_FIRST);
+
+		if (!fStatus)
+		{
+			retval = GetErrorString(TEXT("Error reading key container name.\n"));
+			break;
+		}
+		_tprintf(TEXT("CryptGetProvParam succeeded.\n"));
+		printf("Key Container name: %s\n", m_pContainer);
+
+		CryptReleaseContext(hProv, 0);
+		hProv = 0;
+
+		fStatus = CryptAcquireContext(
+			&hProv, // HCRYPTPROV* phProv,
+			m_pContainer, // LPCTSTR pszContainer,
+			m_pProviderName, // LPCTSTR pszProvider,
+			PROV_RSA_FULL, // DWORD dwProvType,
+			0 // DWORD dwFlags
+		);
+
+		if (!fStatus)
+		{
+			retval = GetErrorString(_T("CryptAcquireContext failed"));
+			break;
+		}
+		_tprintf(_T("CryptAcquireContext succeeded.\n"));
+
+		fStatus = CryptGetUserKey(
+			hProv, // HCRYPTPROV hProv,
+			AT_SIGNATURE, // DWORD dwKeySpec,
+			&hKey // HCRYPTKEY* phUserKey
+		);
+
+		if (!fStatus)
+		{
+			retval = GetErrorString(_T("CryptGetUserKey failed"));
+			break;
+		}
+
+		_tprintf(_T("CryptGetUserKey succeeded.\n"));
+
+
+		DWORD dwKeyLen = 0;
+		dwCertLen = 4;
+
+		fStatus = CryptGetKeyParam(
+			hKey, // HCRYPTKEY hKey,
+			KP_KEYLEN, // DWORD dwParam,
+			(BYTE *)&dwKeyLen, // BYTE* pbData,
+			&dwCertLen, // DWORD* pdwDataLen,
+			0 // DWORD dwFlags
+		);
+
+		if (!fStatus)
+		{
+			retval = GetErrorString(_T("CryptGetKeyParam failed"));
+			break;
+		}
+
+		_tprintf(_T("CryptGetKeyParam Key Length succeeded.\n"));
+		_tprintf(_T("dwKeyLen: %u\n"), dwKeyLen);
+*/
+/*
+		fStatus = CryptGetKeyParam(
+			hKey, // HCRYPTKEY hKey,
+			KP_CERTIFICATE, // DWORD dwParam,
+			NULL, // BYTE* pbData,
+			&dwCertLen, // DWORD* pdwDataLen,
+			0 // DWORD dwFlags
+		);
+
+		if (!fStatus)
+		{
+			retval = GetErrorString(_T("CryptGetKeyParam failed"));
+			break;
+		}
+
+		_tprintf(_T("CryptGetKeyParam Cert Length succeeded.\n"));
+		_tprintf(_T("dwCertLen: %u\n"), dwCertLen);
+
+		pCertBlob = (BYTE*)malloc(dwCertLen);
+		fStatus = CryptGetKeyParam(
+			hKey, // HCRYPTKEY hKey,
+			KP_CERTIFICATE, // DWORD dwParam,
+			pCertBlob, // BYTE* pbData,
+			&dwCertLen, // DWORD* pdwDataLen,
+			0 // DWORD dwFlags
+		);
+
+		if (!fStatus)
+		{
+			retval = GetErrorString(_T("CryptGetKeyParam failed"));
+			break;
+		}
+
+		_tprintf(_T("CryptGetKeyParam Cert Blob succeeded.\n"));
+
+		CryptReleaseContext(hProv, 0);
+		hProv = 0;
+
+		std::ofstream derCertFile("cert.der", std::ios::out | std::ios::binary);
+		derCertFile.write((const char *)pCertBlob, dwCertLen);
+
+		fStatus = CryptBinaryToString(
+			pCertBlob,
+			dwCertLen,
+			CRYPT_STRING_BASE64HEADER,
+			NULL,
+			&dwCertStringLen
+		);
+
+		if (!fStatus)
+		{
+			retval = GetErrorString(_T("CryptBinaryToString failed"));
+			break;
+		}
+
+		_tprintf(_T("CryptBinaryToString succeeded. Length %u\n"), dwCertStringLen);
+
+		pCertString = (TCHAR*)malloc(dwCertStringLen);
+		fStatus = CryptBinaryToString(
+			pCertBlob,
+			dwCertLen,
+			CRYPT_STRING_BASE64HEADER,
+			pCertString,
+			&dwCertStringLen
+		);
+
+		if (!fStatus)
+		{
+			retval = GetErrorString(_T("CryptBinaryToString failed"));
+			break;
+		}
+
+		std::ofstream pemCertFile("cert.pem", std::ios::out | std::ios::binary);
+		pemCertFile.write((const char *)pCertString, dwCertStringLen);
+
+		m_Certificate = pCertString;
+		retval = pCertString;
+*/
+	} while (FALSE);
+
+	if (hKey != 0) CryptDestroyKey(hKey);
+	if (hProv != 0) CryptReleaseContext(hProv, 0);
+	if (NULL != pCertBlob) free(pCertBlob);
+	if (NULL != pCertString) free(pCertString);
+
+	return retval;
 }
 
 std::string SCD_Crypto::encrypt_decrypt_test()
@@ -265,11 +541,11 @@ std::string SCD_Crypto::encrypt_decrypt_test()
 	BOOL fStatus;
 
 	DWORD dwKeyBlobLen;
-	DWORD dwCertLen;
+	//DWORD dwCertLen;
 
 	if (m_Certificate.empty())
 	{
-		retval = GetSC_RSAFull_certificate();
+		retval = Get_SmartCard_RSAFull_certificate();
 
 		if (m_Certificate.empty())
 		{
@@ -450,7 +726,6 @@ void MyHandleError(LPCTSTR psz)
 	_ftprintf(stderr, TEXT("Program terminating. \n"));
 } // End of MyHandleError
 
-
 bool SCD_Crypto::SignMessage(CRYPT_DATA_BLOB * pSignedMessageBlob)
 {
 	bool fReturn = false;
@@ -506,9 +781,15 @@ bool SCD_Crypto::SignMessage(CRYPT_DATA_BLOB * pSignedMessageBlob)
 		0,
 		CERT_FIND_SUBJECT_STR,
 		SIGNER_NAME,
-		NULL))
+		NULL
+	))
 	{
 		_tprintf(TEXT("The signer's certificate was found.\n"));
+		_tprintf(TEXT("The size, in bytes, of the encoded certificate %u\n"), pSignerCert->cbCertEncoded);
+
+		//std::ofstream derCertFile("cert_ss.der", std::ios::out | std::ios::binary);
+		//derCertFile.write((const char *)pSignerCert->pbCertEncoded, pSignerCert->cbCertEncoded);
+
 	}
 	else
 	{
@@ -520,7 +801,7 @@ bool SCD_Crypto::SignMessage(CRYPT_DATA_BLOB * pSignedMessageBlob)
 	SigParams.cbSize = sizeof(CRYPT_SIGN_MESSAGE_PARA);
 	SigParams.dwMsgEncodingType = MY_ENCODING_TYPE;
 	SigParams.pSigningCert = pSignerCert;
-	SigParams.HashAlgorithm.pszObjId = (LPSTR)szOID_RSA_SHA1RSA;
+	SigParams.HashAlgorithm.pszObjId = (LPSTR)szOID_RSA_SHA256RSA;//szOID_RSA_SHA1RSA;
 	SigParams.HashAlgorithm.Parameters.cbData = NULL;
 	SigParams.cMsgCert = 1;
 	SigParams.rgpMsgCert = &pSignerCert;
@@ -710,3 +991,188 @@ exit_VerifySignedMessage:
 
 	return fReturn;
 }
+
+// https://groups.google.com/forum/#!topic/microsoft.public.platformsdk.security/Q4xmlRRug-0
+
+int SCD_Crypto::Export_SelfSigned_RSAFull_certificate()
+{
+	//-------------------------------------------------------------------
+	//  Open the store.
+
+	HCERTSTORE  hMemStore = NULL;
+	if (hMemStore = CertOpenStore(
+		CERT_STORE_PROV_MEMORY,  // A memory store
+		0,  // Encoding type not used
+		NULL,  // Use the default HCRYPTPROV
+		0,  // No flags
+		NULL))
+	{
+		printf("The file store was created successfully.\n");
+	}
+	else
+	{
+		printf("An error occurred during creation of the file store!\n");
+		exit(1);
+	}
+
+	//-------------------------------------------------------------------
+	// Open a system store, in this case, the My store.
+
+	HCERTSTORE hSysStore = NULL;
+	if (hSysStore = CertOpenStore(
+		//CERT_STORE_PROV_SYSTEM,  // The store provider type
+		//0,  // The encoding type is not needed
+		//NULL,  // Use the default HCRYPTPROV
+		//CERT_SYSTEM_STORE_CURRENT_USER,  // Set the store location in a	registry location
+		//L"MY"  // The store name as a Unicode string
+		CERT_STORE_PROV_SYSTEM,
+		0,
+		NULL,
+		CERT_SYSTEM_STORE_CURRENT_USER,
+		CERT_STORE_NAME
+	))
+	{
+		printf("The system store was created successfully.\n");
+	}
+	else
+	{
+		printf("An error occurred during creation "
+			"of the system store!\n");
+		exit(1);
+	}
+
+	//-------------------------------------------------------------------
+	// Get a certificate that has lpszCertSubject as its subject.  
+
+	LPCWSTR lpszCertSubject = L"ABC Company";
+
+	PCCERT_CONTEXT  pDesiredCert = NULL;
+
+	if (pDesiredCert = CertFindCertificateInStore(
+		//hSysStore,
+		//MY_ENCODING_TYPE,  // Use X509_ASN_ENCODING.
+		//0,  // No dwFlags needed.
+		//CERT_FIND_SUBJECT_STR,  // Find a certificate with a subject that matches the string in the next parameter.
+		//lpszCertSubject,  // The Unicode string to be found in a certificate's	subject.
+		//NULL
+		hSysStore,
+		MY_ENCODING_TYPE,
+		0,
+		CERT_FIND_SUBJECT_STR,
+		SIGNER_NAME,
+		NULL
+	))
+	{
+		printf("The desired certificate was found. \n");
+	}
+	else
+	{
+		printf("Could not find the desired certificate.\n");
+	}
+
+	if (pDesiredCert)
+	{
+		if (CertAddCertificateContextToStore(
+			hMemStore,
+			pDesiredCert,
+			CERT_STORE_ADD_NEW,
+			NULL))
+		{
+			printf("The certificate context was added to the file store.\n");
+		}
+		else
+		{
+			printf("Could not add the certificate context to the file store.\n");
+		}
+	}
+
+	// Create the cer file
+	LPCSTR    pszFileName = "test.cer";
+	HANDLE    hFile = NULL;
+
+	if (hFile = CreateFile(
+		pszFileName,  // The file name
+		GENERIC_WRITE,  // Access mode: write to this file
+		0,  // Share mode
+		NULL,  // Uses the DACL created previously
+		CREATE_ALWAYS,  // How to create
+		FILE_ATTRIBUTE_NORMAL,  // File attributes
+		NULL))  // Template
+	{
+		printf("The file was created successfully.\n");
+	}
+	else
+	{
+		printf("An error occurred during creating of the file!\n");
+		exit(1);
+	}
+
+	//-------------------------------------------------------------------
+	// Save the memory store and its certificates to the output file.
+	if (CertSaveStore(
+		//hSysStore,
+		hMemStore,  // Store handle
+		MY_ENCODING_TYPE,
+		CERT_STORE_SAVE_AS_PKCS7,
+		CERT_STORE_SAVE_TO_FILE,
+		hFile,  // The handle of an open disk file
+		0))  // dwFlags: No flags are needed here.
+	{
+		printf("Saved the memory store to disk. \n");
+	}
+	else
+	{
+		std::string retval = GetErrorString("Could not save the memory store to disk.\n");
+		std::cout << retval;
+		exit(1);
+	}
+
+
+	//-------------------------------------------------------------------
+	// Clean up.
+
+	if (pDesiredCert && CertFreeCertificateContext(pDesiredCert))
+	{
+		printf("The certificate context was closed successfully.\n");
+	}
+	else
+	{
+		printf("An error occurred during closing of the "
+			"certificate context.\n");
+	}
+
+	if (hSysStore && CertCloseStore(
+		hSysStore,
+		CERT_CLOSE_STORE_CHECK_FLAG))
+	{
+		printf("The system store was closed successfully.\n");
+	}
+	else
+	{
+		printf("An error occurred during closing of the "
+			"system store.\n");
+	}
+
+	if (hMemStore && CertCloseStore(
+		hMemStore,
+		CERT_CLOSE_STORE_CHECK_FLAG))
+	{
+		printf("The file store was closed successfully.\n");
+	}
+	else
+	{
+		printf("An error occurred during closing of the file store.\n");
+	}
+
+	if (hFile && CloseHandle(hFile))
+	{
+		printf("The file was closed successfully.\n");
+	}
+	else
+	{
+		printf("An error occurred during closing of the file.\n");
+	}
+	return 0;
+
+}
+

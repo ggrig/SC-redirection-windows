@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <tchar.h>
 
-#define BUFFER_SIZE 256
+#define BUFFER_SIZE 1024
 
 class SCD_Crypto
 {
@@ -18,7 +18,9 @@ class SCD_Crypto
 public:
 	SCD_Crypto();
 
-	std::string GetSC_RSAFull_certificate();
+	std::string Get_SmartCard_RSAFull_certificate();
+	std::string Get_SelfSigned_RSAFull_certificate();
+	int Export_SelfSigned_RSAFull_certificate();
 	std::string encrypt_decrypt_test();
 
 	bool SignMessage(CRYPT_DATA_BLOB *pSignedMessageBlob);

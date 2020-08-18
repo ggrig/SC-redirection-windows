@@ -16,9 +16,10 @@
 
 int main()
 {
-/*
 	SCD_SmartCardServer server;
+	SCD_Crypto sc_crypto;
 
+/*
 	server.data = server.cardReader.CheckCard();
 
 	if (!server.data.atrvalid)           // if readed ATR code is valid
@@ -32,13 +33,10 @@ int main()
 	std::string code = server.getCardCode(&server.data, &err);//hexStr(server.data.data, server.data.datalen);
 	_tprintf(_T("ATR %s\n"), code.c_str());
 
-	SCD_Crypto sc_crypto;
-	std::string retval = sc_crypto.GetSC_RSAFull_certificate();
+	std::string retval = sc_crypto.Get_SmartCard_RSAFull_certificate();
 	//std::string retval = sc_crypto.encrypt_decrypt_test();
 	std::cout << retval;
-*/
 
-	SCD_Crypto sc_crypto;
 
 	CRYPT_DATA_BLOB SignedMessage;
 
@@ -53,6 +51,12 @@ int main()
 
 		free(SignedMessage.pbData);
 	}
+*/
+
+	std::string retval = sc_crypto.Get_SelfSigned_RSAFull_certificate();
+	std::cout << retval;
+
+	//sc_crypto.Export_SelfSigned_RSAFull_certificate();
 
 	_tprintf(TEXT("Press any key to exit."));
 	_getch();
