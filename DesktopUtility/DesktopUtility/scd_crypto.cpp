@@ -15,7 +15,7 @@
 #define KEYLENGTH  0x00800000
 #define ENCRYPT_ALGORITHM CALG_RC4
 
-#define PFX_FILE_NAME L"mysite.local.pfx"
+#define PFX_FILE_NAME "mysite.local.pfx"
 #define PFX_FILE_PSW L"123456789"
 
 
@@ -985,6 +985,49 @@ exit_VerifySignedMessage:
 	return fReturn;
 }
 
+BOOL SCD_Crypto::getFromFile(CRYPT_DATA_BLOB * pBryptBlob, const CHAR * pFileName)
+{
+	BOOL retval = TRUE;
+
+	freePFXBlob();
+
+	do {
+		std::ifstream pfx_file(pFileName, std::ifstream::binary);
+
+		if (!pfx_file)
+		{
+			_tprintf(_T("The file \"%s\" not found"), pFileName);
+			retval = FALSE;
+			break;
+		}
+
+		pfx_file.seekg(0, pfx_file.end);
+		pBryptBlob->cbData = pfx_file.tellg();
+		pfx_file.seekg(0, pfx_file.beg);
+
+		pBryptBlob->pbData = new BYTE[pBryptBlob->cbData];
+
+		//std::cout << "Reading " << pfxBlob.cbData << " characters... ";
+		// read data as a block:
+		pfx_file.read((CHAR *)pBryptBlob->pbData, pBryptBlob->cbData);
+
+		retval != pfx_file.fail();
+		pfx_file.close();
+
+		if (!retval)
+		{
+			_tprintf(_T("Failed to read the content of the file  \"%s\" "), pFileName);
+			retval = FALSE;
+			break;
+		}
+
+		_tprintf(_T("\nImport successful\n"));
+		retval = TRUE;
+	} while (FALSE);
+
+	return retval;
+}
+
 BOOL SCD_Crypto::Import_SelfSigned_RSAFull_certificate()
 {
 	BOOL retval = TRUE;
@@ -993,38 +1036,16 @@ BOOL SCD_Crypto::Import_SelfSigned_RSAFull_certificate()
 	freePFXBlob();
 
 	do {
-		std::ifstream pfx_file(PFX_FILE_NAME, std::ifstream::binary);
 
-		if (!pfx_file)
+		if (!getFromFile(&m_pfxBlob, PFX_FILE_NAME))
 		{
-			_tprintf(_T("The PFX file \"%ls\" not found"), PFX_FILE_NAME);
-			retval = FALSE;
-			break;
-		}
-
-		pfx_file.seekg(0, pfx_file.end);
-		m_pfxBlob.cbData = pfx_file.tellg();
-		pfx_file.seekg(0, pfx_file.beg);
-
-		m_pfxBlob.pbData = new BYTE[m_pfxBlob.cbData];
-
-		//std::cout << "Reading " << pfxBlob.cbData << " characters... ";
-		// read data as a block:
-		pfx_file.read((CHAR *)m_pfxBlob.pbData, m_pfxBlob.cbData);
-
-		retval != pfx_file.fail();
-		pfx_file.close();
-
-		if (!retval)
-		{
-			_tprintf(_T("Failed to read the content of the PFX file  \"%ls\" "), PFX_FILE_NAME);
 			retval = FALSE;
 			break;
 		}
 
 		if (FALSE == PFXIsPFXBlob(&m_pfxBlob))  // Check to see if it is a blob
 		{
-			_tprintf(_T("The file \"%ls\" is not a PFX container"), PFX_FILE_NAME);
+			_tprintf(_T("The file \"%s\" is not a PFX container"), PFX_FILE_NAME);
 			retval = FALSE;
 			break;
 		}

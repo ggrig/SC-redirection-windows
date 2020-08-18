@@ -20,7 +20,8 @@ class SCD_Crypto
 		if (m_pfxBlob.pbData) delete[] m_pfxBlob.pbData;
 		m_pfxBlob = { 0 };
 	}
-
+	BOOL getFromFile(CRYPT_DATA_BLOB *, const CHAR *);
+	BOOL Import_SelfSigned_RSAFull_certificate();
 public:
 	SCD_Crypto();
 	~SCD_Crypto() {
@@ -37,6 +38,5 @@ public:
 	bool VerifySignedMessage(
 		CRYPT_DATA_BLOB *pSignedMessageBlob,
 		CRYPT_DATA_BLOB *pDecodedMessageBlob);
-	BOOL Import_SelfSigned_RSAFull_certificate();
 };
 
