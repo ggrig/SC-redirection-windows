@@ -39,25 +39,19 @@ int main()
 */
 
 	CRYPT_DATA_BLOB SignedMessage;
+	CRYPT_DATA_BLOB Data;
 
-	// The message to be signed.
-	// Usually, the message exists somewhere and a pointer is
-	// passed to the application.
-	BYTE* pbMessage =
-		(BYTE*)TEXT("CryptoAPI is a good way to handle security");
+	sc_crypto.getBlobFromFile(&Data, _T("msg"));
 
-	// Calculate the size of message. To include the 
-	// terminating null character, the length is one more byte 
-	// than the length returned by the strlen function.
-	DWORD cbMessage = (lstrlen((TCHAR*)pbMessage) + 1) * sizeof(TCHAR);
-
-
-	if (sc_crypto.SignMessage(&SignedMessage, FALSE, pbMessage, cbMessage))
+	if (sc_crypto.SignMessage(&SignedMessage, &Data))
 	{
 		CRYPT_DATA_BLOB Signature;
 		CRYPT_DATA_BLOB DecodedMessage;
 
-		sc_crypto.GetSignature(&SignedMessage, &Signature);
+		if (sc_crypto.GetSignature(&SignedMessage, &Signature))
+		{
+			sc_crypto.saveBlobToFile(&Signature, "sig.bin");
+		}
 
 		if (sc_crypto.VerifySignedMessage(&SignedMessage, &DecodedMessage))
 		{

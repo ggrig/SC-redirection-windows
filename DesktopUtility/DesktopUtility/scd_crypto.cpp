@@ -733,7 +733,7 @@ void MyHandleError(LPCTSTR psz)
 	_ftprintf(stderr, TEXT("Program terminating. \n"));
 } // End of MyHandleError
 
-bool SCD_Crypto::SignMessage(CRYPT_DATA_BLOB * pSignedMessageBlob, BOOL fDetachedSignature, BYTE* pbMessage, DWORD cbMessage)
+bool SCD_Crypto::SignMessage(CRYPT_DATA_BLOB * pSignedMessageBlob, CRYPT_DATA_BLOB * pData)
 {
 	bool fReturn = false;
 	
@@ -751,13 +751,13 @@ bool SCD_Crypto::SignMessage(CRYPT_DATA_BLOB * pSignedMessageBlob, BOOL fDetache
 	DWORD dwImportFlags = CRYPT_EXPORTABLE | CRYPT_USER_KEYSET | PKCS12_NO_PERSIST_KEY;
 
 	// Create the MessageArray and the MessageSizeArray.
-	const BYTE* MessageArray[] = { pbMessage };
+	const BYTE* MessageArray[] = { pData->pbData };
 	DWORD MessageSizeArray;
-	MessageSizeArray = cbMessage;
+	MessageSizeArray = pData->cbData;
 
 	//  Begin processing. 
 	_tprintf(TEXT("The message to be signed is \"%s\".\n"),
-		pbMessage);
+		pData->pbData);
 
 	if (FALSE == Import_SelfSigned_RSAFull_certificate())
 	{
@@ -804,7 +804,7 @@ bool SCD_Crypto::SignMessage(CRYPT_DATA_BLOB * pSignedMessageBlob, BOOL fDetache
 	// First, get the size of the signed BLOB.
 	if (CryptSignMessage(
 		&SigParams,
-		fDetachedSignature,
+		FALSE,
 		1,
 		MessageArray,
 		&MessageSizeArray,
@@ -832,7 +832,7 @@ bool SCD_Crypto::SignMessage(CRYPT_DATA_BLOB * pSignedMessageBlob, BOOL fDetache
 	// Get the signed message BLOB.
 	if (CryptSignMessage(
 		&SigParams,
-		fDetachedSignature,
+		FALSE,
 		1,
 		MessageArray,
 		&MessageSizeArray,
