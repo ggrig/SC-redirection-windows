@@ -104,16 +104,6 @@
        append("Command: " + e.detail.command + " => error: " + e.detail.error);
        
        remote.sendCommand(e.detail.error);
-
-       if (e.detail.command==="LOGINCODE")
-       {
-          var id = document.getElementById("atr");
-
-          if (id)
-          { 
-            id.innerText = '';
-          } 
-       }    
     };
 
     client.onGetATR = function(e)
@@ -124,17 +114,6 @@
        append("Command: " + e.detail.command + " => Atr: " + e.detail.atr);
 
        remote.sendCommand("ATRCODE:" + e.detail.atr);
-/*
-       if (e.detail.command==="LOGINCODE")
-       {
-          var id = document.getElementById("atr");
-
-          if (id)
-          {
-            id.innerText = e.detail.atr;
-          }
-       } 
-*/
     };
 	
     client.onViewCert       = function(e)
@@ -191,16 +170,6 @@
        clear(maxEle);
 
        append("Command: " + e.detail.command + " => error: " + e.detail.error);
-
-       if (e.detail.command==="LOGINCODE")
-       {
-          var id = document.getElementById("atr");
-
-          if (id)
-          {
-            id.innerText = '';
-          }
-       }
     };
 
     remote.opened = function(e)
