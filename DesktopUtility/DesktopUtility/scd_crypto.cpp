@@ -18,9 +18,68 @@
 #define PFX_FILE_NAME "mysite.local.pfx"
 #define PFX_FILE_PSW L"123456789"
 
-
-
 std::string GetErrorString(LPCTSTR psz);
+
+//-------------------------------------------------------------------
+//    MyHandleError
+void MyHandleError(LPCTSTR psz)
+{
+	_ftprintf(stderr, TEXT("An error occurred in the program. \n"));
+	_ftprintf(stderr, TEXT("%s\n"), psz);
+	_ftprintf(stderr, TEXT("Error number %x.\n"), GetLastError());
+	_ftprintf(stderr, TEXT("Program terminating. \n"));
+} // End of MyHandleError
+
+BOOL saveBlobToFile(CRYPT_DATA_BLOB * pBlob, const CHAR * pFileName)
+{
+	std::ofstream fileStream(pFileName, std::ios::out | std::ios::binary);
+	fileStream.write((const char *)pBlob->pbData, pBlob->cbData);
+
+	return 0;
+}
+
+BOOL binToBase64(CRYPT_DATA_BLOB * pBin, CRYPT_DATA_BLOB * pBase64)
+{
+	BOOL fStatus;
+	*pBase64 = { 0 };
+
+	do {
+		fStatus = CryptBinaryToString(
+			pBin->pbData,
+			pBin->cbData,
+			CRYPT_STRING_BASE64,
+			NULL,
+			&pBase64->cbData
+		);
+
+		if (!fStatus)
+		{
+			MyHandleError(_T("CryptBinaryToString failed"));
+			break;
+		}
+
+		_tprintf(_T("CryptBinaryToString succeeded. Length %u\n"), pBase64->cbData);
+
+		pBase64->pbData = (BYTE *)malloc(pBase64->cbData);
+		fStatus = CryptBinaryToString(
+			pBin->pbData,
+			pBin->cbData,
+			CRYPT_STRING_BASE64,
+			(LPTSTR) pBase64->pbData,
+			&pBase64->cbData
+		);
+
+		if (!fStatus)
+		{
+			MyHandleError(_T("CryptBinaryToString failed"));
+			break;
+		}
+
+
+	} while (FALSE);
+
+	return fStatus;
+}
 
 SCD_Crypto::SCD_Crypto()
 {
@@ -220,8 +279,8 @@ std::string SCD_Crypto::Get_SmartCard_RSAFull_certificate()
 		CryptReleaseContext(hProv, 0);
 		hProv = 0;
 
-		std::ofstream derCertFile("cert.der", std::ios::out | std::ios::binary);
-		derCertFile.write((const char *)pCertBlob, dwCertLen);
+		//std::ofstream derCertFile("cert.der", std::ios::out | std::ios::binary);
+		//derCertFile.write((const char *)pCertBlob, dwCertLen);
 
 		fStatus = CryptBinaryToString(
 			pCertBlob,
@@ -723,16 +782,6 @@ std::string SCD_Crypto::encrypt_decrypt_test()
 #define CERT_STORE_NAME  L"MY"
 
 
-//-------------------------------------------------------------------
-//    MyHandleError
-void MyHandleError(LPCTSTR psz)
-{
-	_ftprintf(stderr, TEXT("An error occurred in the program. \n"));
-	_ftprintf(stderr, TEXT("%s\n"), psz);
-	_ftprintf(stderr, TEXT("Error number %x.\n"), GetLastError());
-	_ftprintf(stderr, TEXT("Program terminating. \n"));
-} // End of MyHandleError
-
 bool SCD_Crypto::SignMessage(CRYPT_DATA_BLOB * pSignedMessageBlob, CRYPT_DATA_BLOB * pData)
 {
 	bool fReturn = false;
@@ -1137,14 +1186,6 @@ BOOL SCD_Crypto::getBlobFromFile(CRYPT_DATA_BLOB * pBryptBlob, const CHAR * pFil
 	return retval;
 }
 
-BOOL SCD_Crypto::saveBlobToFile(CRYPT_DATA_BLOB * pBlob, const CHAR * pFileName)
-{
-	std::ofstream fileStream(pFileName, std::ios::out | std::ios::binary);
-	fileStream.write((const char *)pBlob->pbData, pBlob->cbData);
-
-	return 0;
-}
-
 BOOL SCD_Crypto::Import_SelfSigned_RSAFull_certificate()
 {
 	BOOL retval = TRUE;
@@ -1364,4 +1405,3 @@ int SCD_Crypto::Export_SelfSigned_RSAFull_certificate()
 	return 0;
 
 }
-

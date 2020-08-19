@@ -6,6 +6,15 @@
 
 #define BUFFER_SIZE 1024
 
+inline void freeBlob(CRYPT_DATA_BLOB * blob)
+{
+	if (blob->pbData) delete[] blob->pbData;
+	*blob = { 0 };
+}
+
+BOOL saveBlobToFile(CRYPT_DATA_BLOB * pBlob, const CHAR * pFileName);
+BOOL binToBase64(CRYPT_DATA_BLOB * pBin, CRYPT_DATA_BLOB * pBase64);
+
 class SCD_Crypto
 {
 	CHAR m_pContainer[BUFFER_SIZE];
@@ -42,6 +51,8 @@ public:
 		CRYPT_DATA_BLOB *pDecodedMessageBlob);
 
 	BOOL getBlobFromFile(CRYPT_DATA_BLOB *, const CHAR *);
-	BOOL saveBlobToFile(CRYPT_DATA_BLOB * pBlob, const CHAR * pFileName);
+
+
+
 };
 

@@ -40,6 +40,7 @@ int main()
 
 	CRYPT_DATA_BLOB SignedMessage;
 	CRYPT_DATA_BLOB Data;
+	CRYPT_DATA_BLOB Data64;
 
 	sc_crypto.getBlobFromFile(&Data, _T("msg"));
 
@@ -50,16 +51,23 @@ int main()
 
 		if (sc_crypto.GetSignature(&SignedMessage, &Signature))
 		{
-			sc_crypto.saveBlobToFile(&Signature, "sig.bin");
+			saveBlobToFile(&Signature, "sig.bin");
+		}
+
+		if (binToBase64(&Data, &Data64))
+		{
+			saveBlobToFile(&Data64, "sig64.txt");
 		}
 
 		if (sc_crypto.VerifySignedMessage(&SignedMessage, &DecodedMessage))
 		{
 			free(DecodedMessage.pbData);
 		}
-
-		free(SignedMessage.pbData);
 	}
+
+	freeBlob(&SignedMessage);
+	freeBlob(&Data);
+	freeBlob(&Data64);
 
 	_tprintf(TEXT("Press any key to exit."));
 	_getch();
