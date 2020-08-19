@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <tchar.h>
+#include <string>
 
 // Get error message text, given an error code.
 // Typically, the dwErr parameter passed to this function is retrieved
@@ -51,4 +52,19 @@ void GetCSBackupAPIErrorMessage(DWORD dwErr, TCHAR * wszMsgBuff)
 		// Free the library.
 		FreeLibrary(hInst);
 	}
+}
+
+std::string GetErrorString(LPCTSTR psz)
+{
+	std::string retval = "ERROR: ";
+
+	TCHAR   errMsg[512];  // Buffer for text.
+
+	GetCSBackupAPIErrorMessage(GetLastError(), errMsg);
+
+	retval += psz;
+	retval += ": ";
+	retval += errMsg;
+
+	return retval;
 }

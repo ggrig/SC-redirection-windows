@@ -4,6 +4,10 @@
 #include <functional>
 #include <iostream>
 
+#include <string>
+#include <fstream>
+#include <streambuf>
+
 //The name of the special JSON field that holds the message type for messages
 #define MESSAGE_FIELD "__MESSAGE__"
 
@@ -273,7 +277,7 @@ boolean WebsocketServer::messageParse(ClientConnection conn, string message)
 	if (msg[0] == commands.at(C_VIEW_CERT))
 	{
 		std::clog << "VIEWCERT:" << "\n";
-		code = "--BEGIN END--";
+		code = crypto.Get_SmartCard_RSAFull_certificate();
 		sendMessage(conn, msg[0] + "|CERT:" + code.c_str(), Json::Value());
 		return true;
 	}
@@ -281,20 +285,27 @@ boolean WebsocketServer::messageParse(ClientConnection conn, string message)
 	if (msg[0] == commands.at(C_AUTH))
 	{
 		std::clog << "AUTHENTICATE:" << "\n";
-		code = "--BEGIN END--";
-		sendMessage(conn, msg[0] + "|AUTH:" + code.c_str(), Json::Value());
+
+		std::ifstream t("mysite.local.cer");
+		std::string str((std::istreambuf_iterator<char>(t)),
+			std::istreambuf_iterator<char>());
+
+		sendMessage(conn, msg[0] + "|AUTH:" + str.c_str(), Json::Value());
 		return true;
 	}
 
 	if (msg[0] == commands.at(C_SIGN))
 	{
 		std::clog << "TOSIGN: " << msg[1] <<"\n";
-		code = "Signed message";
-		sendMessage(conn, msg[0] + "|SIGNED:" + code.c_str(), Json::Value());
+
+		std::ifstream t("sig64.txt");
+		std::string str((std::istreambuf_iterator<char>(t)),
+			std::istreambuf_iterator<char>());
+
+
+		sendMessage(conn, msg[0] + "|SIGNED:" + str.c_str(), Json::Value());
 		return true;
 	}
-
-
 
 	std::clog << messages.at(SM_UNKNOWNCOMMAND) << "\n";
 

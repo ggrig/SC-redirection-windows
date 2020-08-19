@@ -9,6 +9,7 @@
 #include <json/json.h>
 
 #include <scd_pcsc.h>
+#include <scd_crypto.h>
 
 #include <functional>
 #include <string>
@@ -55,6 +56,8 @@ private:
 
 	SCD_PCSC cardReader;
 	SCD_PCSC::card_data data;
+
+	SCD_Crypto crypto;
 
 	string lastError;
 	string atr = "";
