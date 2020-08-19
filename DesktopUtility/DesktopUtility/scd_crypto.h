@@ -35,6 +35,9 @@ public:
 	int Export_SelfSigned_RSAFull_certificate();
 
 	bool SignMessage(CRYPT_DATA_BLOB *pSignedMessageBlob, BOOL fDetachedSignature, BYTE* pbMessage, DWORD cbMessage);
+	bool GetSignature(
+		CRYPT_DATA_BLOB *pSignedMessageBlob,
+		CRYPT_DATA_BLOB *pSignatureBlob);
 	bool VerifySignedMessage(
 		CRYPT_DATA_BLOB *pSignedMessageBlob,
 		CRYPT_DATA_BLOB *pDecodedMessageBlob);

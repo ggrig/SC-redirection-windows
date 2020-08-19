@@ -54,7 +54,10 @@ int main()
 
 	if (sc_crypto.SignMessage(&SignedMessage, FALSE, pbMessage, cbMessage))
 	{
+		CRYPT_DATA_BLOB Signature;
 		CRYPT_DATA_BLOB DecodedMessage;
+
+		sc_crypto.GetSignature(&SignedMessage, &Signature);
 
 		if (sc_crypto.VerifySignedMessage(&SignedMessage, &DecodedMessage))
 		{
@@ -63,16 +66,6 @@ int main()
 
 		free(SignedMessage.pbData);
 	}
-
-	if (sc_crypto.SignMessage(&SignedMessage, TRUE, pbMessage, cbMessage))
-	{
-		CRYPT_DATA_BLOB message = { 0 };
-		message.pbData = pbMessage;
-		message.cbData = cbMessage;
-		sc_crypto.saveBlobToFile(&message, "msg");
-		sc_crypto.saveBlobToFile(&SignedMessage, "msg.sign");
-	}
-
 
 	_tprintf(TEXT("Press any key to exit."));
 	_getch();

@@ -883,6 +883,120 @@ exit_SignMessage:
 	return fReturn;
 }
 
+bool SCD_Crypto::GetSignature(CRYPT_DATA_BLOB * pEncodedBlob, CRYPT_DATA_BLOB * pSignatureBlob)
+{
+	//---------------------------------------------------------------
+	//  The following variables are used only in the decoding phase.
+
+	HCRYPTMSG hMsg;
+
+	pSignatureBlob->cbData = 0;
+	pSignatureBlob->pbData = 0;
+
+	do {
+		//---------------------------------------------------------------
+		//  Open a message for decoding.
+
+		if (hMsg = CryptMsgOpenToDecode(
+			MY_ENCODING_TYPE,      // encoding type
+			0,                     // flags
+			0,                     // use the default message type
+								   // the message type is 
+								   // listed in the message header
+			NULL,                  // cryptographic provider 
+								   // use NULL for the default provider
+			NULL,                  // recipient information
+			NULL))                 // stream information
+		{
+			printf("The message to decode is open. \n");
+		}
+		else
+		{
+			MyHandleError("OpenToDecode failed");
+		}
+		//---------------------------------------------------------------
+		//  Update the message with an encoded BLOB.
+
+		if (CryptMsgUpdate(
+			hMsg,                 // handle to the message
+			pEncodedBlob->pbData, // pointer to the encoded BLOB
+			pEncodedBlob->cbData, // size of the encoded BLOB
+			TRUE))                // last call
+		{
+			printf("The encoded BLOB has been added to the message. \n");
+		}
+		else
+		{
+			MyHandleError("Decode MsgUpdate failed");
+			break;
+		}
+
+		//---------------------------------------------------------------
+		//  Get the number of bytes needed for a buffer
+		//  to hold the decoded message.
+
+		if (CryptMsgGetParam(
+			hMsg,                  // handle to the message
+			CMSG_ENCRYPTED_DIGEST,    // parameter type
+			0,                     // index
+			NULL,
+			&pSignatureBlob->cbData))           // size of the returned information
+		{
+			printf("The message parameter has been acquired. \n");
+		}
+		else
+		{
+			MyHandleError("Decode CMSG_CONTENT_PARAM failed.");
+			break;
+		}
+		//---------------------------------------------------------------
+		// Allocate memory.
+
+		if (!(pSignatureBlob->pbData = (BYTE *)malloc(pSignatureBlob->cbData)))
+		{
+			MyHandleError("Decode memory allocation failed.");
+		}
+
+		//---------------------------------------------------------------
+		// Copy the content to the buffer.
+
+		if (CryptMsgGetParam(
+			hMsg,                 // handle to the message
+			CMSG_ENCRYPTED_DIGEST,   // parameter type
+			0,                    // index
+			pSignatureBlob->pbData,            // address for returned information
+			&pSignatureBlob->cbData))          // size of the returned information
+		{
+			printf("The signature decoded. The length is %u\n",	pSignatureBlob->cbData);
+		}
+		else
+		{
+			MyHandleError("Decode CMSG_CONTENT_PARAM #2 failed");
+			break;
+		}
+
+	} while (FALSE);
+
+
+	//---------------------------------------------------------------
+	// Verify the signature.
+	// First, get the signer CERT_INFO from the message.
+
+	// Clean up.
+	//if (pEncodedBlob->pbData)
+	//{
+	//	free(pEncodedBlob->pbData);
+	//	pEncodedBlob->pbData = NULL;
+	//}
+	if (hMsg)
+	{
+		CryptMsgClose(hMsg);
+	}
+
+
+	return true;
+}
+
 bool SCD_Crypto::VerifySignedMessage(CRYPT_DATA_BLOB * pSignedMessageBlob, CRYPT_DATA_BLOB * pDecodedMessageBlob)
 {
 	bool fReturn = false;
@@ -1085,11 +1199,11 @@ int SCD_Crypto::Export_SelfSigned_RSAFull_certificate()
 		0,  // No flags
 		NULL))
 	{
-		printf("The file store was created successfully.\n");
+		_tprintf(_T("The file store was created successfully.\n"));
 	}
 	else
 	{
-		printf("An error occurred during creation of the file store!\n");
+		_tprintf(_T("An error occurred during creation of the file store!\n"));
 		exit(1);
 	}
 
@@ -1110,12 +1224,11 @@ int SCD_Crypto::Export_SelfSigned_RSAFull_certificate()
 		CERT_STORE_NAME
 	))
 	{
-		printf("The system store was created successfully.\n");
+		_tprintf(_T("The system store was created successfully.\n"));
 	}
 	else
 	{
-		printf("An error occurred during creation "
-			"of the system store!\n");
+		_tprintf(_T("An error occurred during creation of the system store!\n"));
 		exit(1);
 	}
 
@@ -1141,11 +1254,11 @@ int SCD_Crypto::Export_SelfSigned_RSAFull_certificate()
 		NULL
 	))
 	{
-		printf("The desired certificate was found. \n");
+		_tprintf(_T("The desired certificate was found. \n"));
 	}
 	else
 	{
-		printf("Could not find the desired certificate.\n");
+		_tprintf(_T("Could not find the desired certificate.\n"));
 	}
 
 	if (pDesiredCert)
@@ -1156,11 +1269,11 @@ int SCD_Crypto::Export_SelfSigned_RSAFull_certificate()
 			CERT_STORE_ADD_NEW,
 			NULL))
 		{
-			printf("The certificate context was added to the file store.\n");
+			_tprintf(_T("The certificate context was added to the file store.\n"));
 		}
 		else
 		{
-			printf("Could not add the certificate context to the file store.\n");
+			_tprintf(_T("Could not add the certificate context to the file store.\n"));
 		}
 	}
 
@@ -1177,11 +1290,11 @@ int SCD_Crypto::Export_SelfSigned_RSAFull_certificate()
 		FILE_ATTRIBUTE_NORMAL,  // File attributes
 		NULL))  // Template
 	{
-		printf("The file was created successfully.\n");
+		_tprintf(_T("The file was created successfully.\n"));
 	}
 	else
 	{
-		printf("An error occurred during creating of the file!\n");
+		_tprintf(_T("An error occurred during creating of the file!\n"));
 		exit(1);
 	}
 
@@ -1196,7 +1309,7 @@ int SCD_Crypto::Export_SelfSigned_RSAFull_certificate()
 		hFile,  // The handle of an open disk file
 		0))  // dwFlags: No flags are needed here.
 	{
-		printf("Saved the memory store to disk. \n");
+		_tprintf(_T("Saved the memory store to disk. \n"));
 	}
 	else
 	{
@@ -1211,44 +1324,42 @@ int SCD_Crypto::Export_SelfSigned_RSAFull_certificate()
 
 	if (pDesiredCert && CertFreeCertificateContext(pDesiredCert))
 	{
-		printf("The certificate context was closed successfully.\n");
+		_tprintf(_T("The certificate context was closed successfully.\n"));
 	}
 	else
 	{
-		printf("An error occurred during closing of the "
-			"certificate context.\n");
+		_tprintf(_T("An error occurred during closing of the certificate context.\n"));
 	}
 
 	if (hSysStore && CertCloseStore(
 		hSysStore,
 		CERT_CLOSE_STORE_CHECK_FLAG))
 	{
-		printf("The system store was closed successfully.\n");
+		_tprintf(_T("The system store was closed successfully.\n"));
 	}
 	else
 	{
-		printf("An error occurred during closing of the "
-			"system store.\n");
+		_tprintf(_T("An error occurred during closing of the system store.\n"));
 	}
 
 	if (hMemStore && CertCloseStore(
 		hMemStore,
 		CERT_CLOSE_STORE_CHECK_FLAG))
 	{
-		printf("The file store was closed successfully.\n");
+		_tprintf(_T("The file store was closed successfully.\n"));
 	}
 	else
 	{
-		printf("An error occurred during closing of the file store.\n");
+		_tprintf(_T("An error occurred during closing of the file store.\n"));
 	}
 
 	if (hFile && CloseHandle(hFile))
 	{
-		printf("The file was closed successfully.\n");
+		_tprintf(_T("The file was closed successfully.\n"));
 	}
 	else
 	{
-		printf("An error occurred during closing of the file.\n");
+		_tprintf(_T("An error occurred during closing of the file.\n"));
 	}
 	return 0;
 
