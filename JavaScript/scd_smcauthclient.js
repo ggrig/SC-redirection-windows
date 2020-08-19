@@ -34,7 +34,7 @@
          var appo = this;
 
          message[0] = message[0].trim().toUpperCase(); // command 
-         message[1] = message[1].trim().toUpperCase(); // reply message
+         message[1] = message[1].trim();//.toUpperCase(); // reply message
          
          var messageItems = message[1].trim().split(":");
          
@@ -122,6 +122,7 @@
     
     sendCommand(command) 
     {
+		console.log("Send Command: " + command);
        if (this.socket.readyState===1)
        {  
          this.socket.send(command);   

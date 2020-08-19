@@ -45,6 +45,7 @@ WebsocketServer::WebsocketServer(int16_t port, ServerType type) : type(type), po
 	commands.insert(std::pair<int, std::string>(C_ATR, "ATRCODE"));
 	commands.insert(std::pair<int, std::string>(C_VIEW_CERT, "VIEWCERT"));
 	commands.insert(std::pair<int, std::string>(C_AUTH, "AUTHENTICATE"));
+	commands.insert(std::pair<int, std::string>(C_SIGN, "TOSIGN"));
 
 }
 
@@ -228,9 +229,9 @@ boolean WebsocketServer::messageParse(ClientConnection conn, string message)
 	int err;
 
 	// convert string to upper case
-	std::for_each(message.begin(), message.end(), [](char & c) {
-		c = ::toupper(c);
-	});
+	//std::for_each(message.begin(), message.end(), [](char & c) {
+	//	c = ::toupper(c);
+	//});
 
 	std::clog << "Message Received: " << message << "\n";
 
@@ -284,6 +285,16 @@ boolean WebsocketServer::messageParse(ClientConnection conn, string message)
 		sendMessage(conn, msg[0] + "|AUTH:" + code.c_str(), Json::Value());
 		return true;
 	}
+
+	if (msg[0] == commands.at(C_SIGN))
+	{
+		std::clog << "TOSIGN: " << msg[1] <<"\n";
+		code = "Signed message";
+		sendMessage(conn, msg[0] + "|SIGNED:" + code.c_str(), Json::Value());
+		return true;
+	}
+
+
 
 	std::clog << messages.at(SM_UNKNOWNCOMMAND) << "\n";
 
