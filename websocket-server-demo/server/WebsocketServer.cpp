@@ -43,6 +43,8 @@ WebsocketServer::WebsocketServer(int16_t port, ServerType type) : type(type), po
 	messages.insert(std::pair<int, std::string>(SM_UNKNOWN, "Unknown"));
 
 	commands.insert(std::pair<int, std::string>(C_ATR, "ATRCODE"));
+	commands.insert(std::pair<int, std::string>(C_VIEW_CERT, "VIEWCERT"));
+	commands.insert(std::pair<int, std::string>(C_AUTH, "AUTHENTICATE"));
 
 }
 
@@ -264,6 +266,20 @@ boolean WebsocketServer::messageParse(ClientConnection conn, string message)
 			sendMessage(conn, msg[0] + "|" + data.errmsg, Json::Value());
 		}
 
+		return true;
+	}
+
+	if (msg[0] == commands.at(C_VIEW_CERT))
+	{
+		std::clog << "VIEWCERT:" << "\n";
+		sendMessage(conn, msg[0] + "|CERT:" + code.c_str(), Json::Value());
+		return true;
+	}
+
+	if (msg[0] == commands.at(C_AUTH))
+	{
+		std::clog << "AUTHENTICATE:" << "\n";
+		sendMessage(conn, msg[0] + "|AUTH:" + code.c_str(), Json::Value());
 		return true;
 	}
 

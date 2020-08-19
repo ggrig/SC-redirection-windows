@@ -39,7 +39,9 @@ private:
 	};
 
 	enum Commands { 
-		C_ATR
+		C_ATR,
+		C_VIEW_CERT,
+		C_AUTH
 	};
 
 	map<int, string> messages;

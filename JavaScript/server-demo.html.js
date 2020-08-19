@@ -134,6 +134,21 @@
           }
        }    
     };
+	
+    client.onViewCert       = function(e)
+	{
+       clear(maxEle);  
+		
+       append("Command: " + e.detail.command + " => Cert: " + e.detail.atr);
+
+	};
+	
+    client.onAuthenticate   = function(e)
+	{
+       clear(maxEle);  
+		
+       append("Command: " + e.detail.command + " => Auth: " + e.detail.atr);
+	};
 
     client.opened = function(e)
     {

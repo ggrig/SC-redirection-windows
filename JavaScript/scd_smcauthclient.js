@@ -21,6 +21,8 @@
       
       this.onGetATR         = function(e){};      
       this.onSmcError       = function(e){};
+      this.onViewCert       = function(e){};
+      this.onAuthenticate   = function(e){};
                               
       this.onmessage = function(event)
       {
@@ -44,19 +46,19 @@
                 
                this.dispatchEvent(event);
             }
-            else if (messageItems[0]==="TIMEOUT")
+            else if (messageItems[0]==="CERT")
             {
                var seconds = messageItems[1]; 
                
-               var event = new CustomEvent("settimeout", { detail: {command: message[0], timeout: seconds} });
+               var event = new CustomEvent("viewcert", { detail: {command: message[0], timeout: seconds} });
                 
                this.dispatchEvent(event);
             }    
-            else if (messageItems[0]==="ERROR")
+            else if (messageItems[0]==="AUTH")
             {
                var smcError = message[1]; 
                
-               var event = new CustomEvent("smcerror", { detail: {command: message[0], error: smcError} });
+               var event = new CustomEvent("authenticate", { detail: {command: message[0], error: smcError} });
                 
                this.dispatchEvent(event);
             }    
@@ -70,36 +72,6 @@
                 
             this.dispatchEvent(event); 
          }
-         else if (message[1]==="VALIDATED")
-         {
-            var event = new CustomEvent("validated", { detail: {command: message[0], validated: true} });
-                
-            this.dispatchEvent(event);  
-         }
-         else if (message[1]==="NOTVALIDATED")
-         {
-            var event = new CustomEvent("validated", { detail: {command: message[0], validated: false} });
-                
-            this.dispatchEvent(event);  
-         }
-         else if (message[1]==="AUTHENTICATED")
-         {
-            var event = new CustomEvent("authenticated", { detail: {command: message[0], authenticated: true} });
-                
-            this.dispatchEvent(event);  
-         }
-         else if (message[1]==="NOTAUTHENTICATED")
-         {
-            var event = new CustomEvent("authenticated", { detail: {command: message[0], authenticated: false} });
-                
-            this.dispatchEvent(event);  
-         }
-         else if (message[1]==="INTEGRATED" || message[1].toUpperCase()==="STANDALONE")
-         {
-            var event = new CustomEvent("servertype", { detail: {command: message[0], type: message[1]} });
-                
-            this.dispatchEvent(event);  
-         }         
       };
       
       this.url = "ws://" + address +":" + port;   
@@ -116,6 +88,8 @@
        
        this.socket.addEventListener("smcerror"      , this.onSmcError);      
        this.socket.addEventListener("getatr"        , this.onGetATR);
+       this.socket.addEventListener("viewcert"      , this.onViewCert);
+       this.socket.addEventListener("authenticate"  , this.onAuthenticate);
     }
     
     sendCommand(command) 
@@ -138,6 +112,16 @@
      getATR()
      {    
         return this.sendCommand("ATRCODE:");   
+     }
+
+     getCertificate()
+     {    
+        return this.sendCommand("VIEWCERT:");   
+     }
+
+     Authenticate()
+     {    
+        return this.sendCommand("AUTHENTICATE:");   
      }
 
      /**
