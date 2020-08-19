@@ -46,6 +46,14 @@
                 
                this.dispatchEvent(event);
             }
+            else if (messageItems[0]==="ERROR")
+            {
+               var smcError = message[1];
+
+               var event = new CustomEvent("smcerror", { detail: {command: message[0], error: smcError} });
+
+               this.dispatchEvent(event);
+            }
             else if (messageItems[0]==="CERT")
             {
                var certificate = messageItems[1]; 
