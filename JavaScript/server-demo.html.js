@@ -109,8 +109,8 @@
     client.onGetATR = function(e)
     {
        clear(maxEle);  
-	   console.log("onViewCert:" + e.detail.command);
-	   console.log("onViewCert:" + e.detail.atr);
+	   //console.log("onGetATR:" + e.detail.command);
+	   //console.log("onGetATR:" + e.detail.atr);
        append("Command: " + e.detail.command + " => Atr: " + e.detail.atr);
 
        remote.sendCommand("ATRCODE:" + e.detail.atr);
@@ -123,14 +123,17 @@
 	   //console.log("onViewCert:" + e.detail.cert);
        append("Command: " + e.detail.command + " => Cert: " + e.detail.cert);
 
+       remote.sendCommand("VIEWCERT:" + e.detail.cert);
 	};
 	
     client.onAuthenticate   = function(e)
 	{
        clear(maxEle);  
-	   //console.log("onViewCert:" + e.detail.command);
-	   //console.log("onViewCert:" + e.detail.cert);	
+	   //console.log("onAuthenticate:" + e.detail.command);
+	   //console.log("onAuthenticate:" + e.detail.cert);	
        append("Command: " + e.detail.command + " => Auth: " + e.detail.cert);
+	   
+       remote.sendCommand("AUTHENTICATE:" + e.detail.cert);   
 	};
 
     client.opened = function(e)

@@ -122,7 +122,7 @@
         return this.sendCommand("ATRCODE:");   
      }
 
-     getCertificate()
+     viewCert()
      {    
         return this.sendCommand("VIEWCERT:");   
      }
