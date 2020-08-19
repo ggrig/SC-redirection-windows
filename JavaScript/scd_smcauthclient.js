@@ -23,6 +23,8 @@
       this.onSmcError       = function(e){};
       this.onViewCert       = function(e){};
       this.onAuthenticate   = function(e){};
+      this.onMsgToSign      = function(e){};
+      this.onMsgSigned      = function(e){};
                               
       this.onmessage = function(event)
       {
@@ -70,6 +72,22 @@
                 
                this.dispatchEvent(event);
             }    
+            else if (messageItems[0]==="TOSIGN")
+            {
+               var message = messageItems[1]; 
+               
+               var event = new CustomEvent("tosign", { detail: {command: message[0], msg: message} });
+                
+               this.dispatchEvent(event);
+            }    
+            else if (messageItems[0]==="SIGNED")
+            {
+               var message = messageItems[1]; 
+               
+               var event = new CustomEvent("signed", { detail: {command: message[0], msg: message} });
+                
+               this.dispatchEvent(event);
+            }    
             
             return;
          }    
@@ -98,6 +116,8 @@
        this.socket.addEventListener("getatr"        , this.onGetATR);
        this.socket.addEventListener("viewcert"      , this.onViewCert);
        this.socket.addEventListener("authenticate"  , this.onAuthenticate);
+       this.socket.addEventListener("tosign"        , this.onMsgToSign);
+       this.socket.addEventListener("signed"        , this.onMsgSigned);
     }
     
     sendCommand(command) 
@@ -127,8 +147,18 @@
         return this.sendCommand("VIEWCERT:");   
      }
 
-     Authenticate()
+     toAuthenticate()
      {    
         return this.sendCommand("AUTHENTICATE:");   
      }
+	 
+	 msgToSign()
+	 {
+        return this.sendCommand("TOSIGN:");   
+	 }
+	 
+	 msgSigned()
+	 {
+        return this.sendCommand("SIGNED:");   
+	 }	 
   }

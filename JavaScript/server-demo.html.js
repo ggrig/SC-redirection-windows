@@ -168,22 +168,48 @@
        append("Web socket error: " + message);  
     };
 
+    client.onAuthenticate   = function(e)
+	{
+       clear(maxEle);  
+	   //console.log("onAuthenticate:" + e.detail.command);
+	   //console.log("onAuthenticate:" + e.detail.cert);	
+       append("Command: " + e.detail.command + " => Auth: " + e.detail.cert);
+	   
+       remote.sendCommand("AUTHENTICATE:" + e.detail.cert);
+	};
+	
+	client.onMsgSigned =  function(e)
+    {
+       clear(maxEle);
+
+       append("Command: " + e.detail.command + " => signed: " + e.detail.msg);
+	   
+	   remote.sendCommand("SIGNED:" + e.detail.msg);
+    };
+
+// Remote Web server event handlers
+
+	remote.onMsgToSign =  function(e)
+    {
+       clear(maxEle);
+
+       append("Command: " + e.detail.command + " => tosign: " + e.detail.msg);
+	   
+	   client.sendCommand("TOSIGN:" + e.detail.msg);
+    };
+	
     remote.onSmcError = function(e)
     {
        clear(maxEle);
 
        append("Command: " + e.detail.command + " => error: " + e.detail.error);
     };
-
+	
     remote.opened = function(e)
     {
        setData(" Opened");
 
        append("Remote Connection Opened");
-
-//      append("Get login code...");
-
-//       remote.getLoginCode();
     };
 
     remote.closed = function(e)
