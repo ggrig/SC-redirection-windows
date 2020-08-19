@@ -272,6 +272,7 @@ boolean WebsocketServer::messageParse(ClientConnection conn, string message)
 	if (msg[0] == commands.at(C_VIEW_CERT))
 	{
 		std::clog << "VIEWCERT:" << "\n";
+		code = "--BEGIN END--";
 		sendMessage(conn, msg[0] + "|CERT:" + code.c_str(), Json::Value());
 		return true;
 	}
@@ -279,6 +280,7 @@ boolean WebsocketServer::messageParse(ClientConnection conn, string message)
 	if (msg[0] == commands.at(C_AUTH))
 	{
 		std::clog << "AUTHENTICATE:" << "\n";
+		code = "--BEGIN END--";
 		sendMessage(conn, msg[0] + "|AUTH:" + code.c_str(), Json::Value());
 		return true;
 	}

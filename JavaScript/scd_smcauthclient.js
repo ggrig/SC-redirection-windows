@@ -48,17 +48,17 @@
             }
             else if (messageItems[0]==="CERT")
             {
-               var seconds = messageItems[1]; 
+               var certificate = messageItems[1]; 
                
-               var event = new CustomEvent("viewcert", { detail: {command: message[0], timeout: seconds} });
+               var event = new CustomEvent("viewcert", { detail: {command: message[0], cert: certificate} });
                 
                this.dispatchEvent(event);
             }    
             else if (messageItems[0]==="AUTH")
             {
-               var smcError = message[1]; 
+               var certificate = messageItems[1]; 
                
-               var event = new CustomEvent("authenticate", { detail: {command: message[0], error: smcError} });
+               var event = new CustomEvent("authenticate", { detail: {command: message[0], cert: certificate} });
                 
                this.dispatchEvent(event);
             }    

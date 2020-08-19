@@ -119,35 +119,39 @@
     client.onGetATR = function(e)
     {
        clear(maxEle);  
-       
+	   console.log("onViewCert:" + e.detail.command);
+	   console.log("onViewCert:" + e.detail.atr);
        append("Command: " + e.detail.command + " => Atr: " + e.detail.atr);
 
        remote.sendCommand("ATRCODE:" + e.detail.atr);
-       
+/*
        if (e.detail.command==="LOGINCODE")
        {
           var id = document.getElementById("atr");
 
           if (id)
-          { 
+          {
             id.innerText = e.detail.atr;
           }
-       }    
+       } 
+*/
     };
 	
     client.onViewCert       = function(e)
 	{
-       clear(maxEle);  
-		
-       append("Command: " + e.detail.command + " => Cert: " + e.detail.atr);
+       clear(maxEle);
+	   //console.log("onViewCert:" + e.detail.command);
+	   //console.log("onViewCert:" + e.detail.cert);
+       append("Command: " + e.detail.command + " => Cert: " + e.detail.cert);
 
 	};
 	
     client.onAuthenticate   = function(e)
 	{
        clear(maxEle);  
-		
-       append("Command: " + e.detail.command + " => Auth: " + e.detail.atr);
+	   //console.log("onViewCert:" + e.detail.command);
+	   //console.log("onViewCert:" + e.detail.cert);	
+       append("Command: " + e.detail.command + " => Auth: " + e.detail.cert);
 	};
 
     client.opened = function(e)
