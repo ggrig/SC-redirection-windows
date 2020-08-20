@@ -1,8 +1,8 @@
 # Smart Card redirection POC (Windows 10)
 
 The Visual Studio 2017 solution is based on the following projects:
-https://github.com/adamrehn/websocket-server-demo
-https://github.com/SC-Develop/SCD_SMCAuthServer
+- https://github.com/adamrehn/websocket-server-demo
+- https://github.com/SC-Develop/SCD_SMCAuthServer
 
 The solution implements WebSocket server on Windows 10 and communicates to Ubuntu 18.04 WebSocket server through the JavaScript
 
@@ -21,7 +21,7 @@ See https://docs.microsoft.com/en-us/windows/win32/seccertenroll/cryptoapi-crypt
 ## Smart Cards
 
 The following is supported:
-- identifying if a Smar Card is attached to the computer
+- identifying if a Smart Card is attached to the computer
 - obtaining and showing certificates stored on a Smart Card
 
 Ideally, the project would utilize the smart-cards for crypto operations as well. However, the only smart card available during the development was the developer's national ID. That particular smart card was supported by a custom Crypto Service Provider whose documentation was not accessible.
