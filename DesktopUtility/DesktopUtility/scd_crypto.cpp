@@ -6,7 +6,6 @@
 #include <sstream>
 #include <iomanip>
 
-#include "scd_smartcardserver.h"
 #include "scd_crypto.h"
 
 #include <conio.h>
@@ -343,7 +342,7 @@ bool SCD_Crypto::SignMessage_With_SmartCard(CRYPT_DATA_BLOB * pSignedMessageBlob
 	LONG lReturn;
 	DWORD lStatus;
 	DWORD dwCertLen;
-	DWORD dwCertStringLen;
+	//DWORD dwCertStringLen;
 	BYTE* pCertBlob = NULL;
 	PCCERT_CONTEXT pSignerCert = NULL;
 
@@ -1463,7 +1462,7 @@ BOOL SCD_Crypto::getBlobFromFile(CRYPT_DATA_BLOB * pBryptBlob, const CHAR * pFil
 		// read data as a block:
 		pfx_file.read((CHAR *)pBryptBlob->pbData, pBryptBlob->cbData);
 
-		retval != pfx_file.fail();
+		retval = !pfx_file.fail();
 		pfx_file.close();
 
 		if (!retval)

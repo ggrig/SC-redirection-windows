@@ -40,6 +40,7 @@ public:
 	//std::string encrypt_decrypt_test();
 
 	std::string Get_SmartCard_RSAFull_certificate();
+	bool SignMessage_With_SmartCard(CRYPT_DATA_BLOB *pSignedMessageBlob, CRYPT_DATA_BLOB * pData);
 	//int Export_SelfSigned_RSAFull_certificate();
 
 	bool SignMessage(CRYPT_DATA_BLOB *pSignedMessageBlob, CRYPT_DATA_BLOB * pData);
