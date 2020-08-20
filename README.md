@@ -8,6 +8,7 @@ The solution implements WebSocket server on Windows 10 and communicates to Ubunt
 
 ## Testing it
 
+ - The Ubuntu server is accessed with 'sc_server.com' domain name. Add entry for it to C:\Windows\System32\drivers\etc\hosts file
  - Run the server-demo.html from the JavaScript folder
  - Run the WebSocket-server-demo project in Visual Studio debugger
  - Run the Ubuntu server
