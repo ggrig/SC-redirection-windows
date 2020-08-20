@@ -1,4 +1,4 @@
-#Smart Card redirection POC (Windows 10)
+# Smart Card redirection POC (Windows 10)
 
 The Visual Studio 2017 solution is based on the following projects:
 https://github.com/adamrehn/websocket-server-demo
