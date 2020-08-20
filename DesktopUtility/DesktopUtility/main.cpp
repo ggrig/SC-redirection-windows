@@ -69,6 +69,35 @@ int main()
 	freeBlob(&Data);
 	freeBlob(&Signature64);
 
+	sc_crypto.getBlobFromFile(&Data, _T("msg"));
+
+	if (sc_crypto.SignMessage_With_SmartCard(&SignedMessage, &Data))
+	{
+		CRYPT_DATA_BLOB Signature;
+		CRYPT_DATA_BLOB DecodedMessage;
+
+		if (sc_crypto.GetSignature(&SignedMessage, &Signature))
+		{
+			saveBlobToFile(&Signature, "sig_sc.bin");
+		}
+
+		if (binToBase64(&Signature, &Signature64))
+		{
+			saveBlobToFile(&Signature64, "sig64_sc.txt");
+		}
+
+		//if (sc_crypto.VerifySignedMessage(&SignedMessage, &DecodedMessage))
+		//{
+		//	free(DecodedMessage.pbData);
+		//}
+	}
+
+	freeBlob(&SignedMessage);
+	freeBlob(&Data);
+	freeBlob(&Signature64);
+
+
+
 	_tprintf(TEXT("Press any key to exit."));
 	_getch();
 

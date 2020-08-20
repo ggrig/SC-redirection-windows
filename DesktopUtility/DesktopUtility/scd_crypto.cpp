@@ -18,16 +18,16 @@
 #define PFX_FILE_NAME "mysite.local.pfx"
 #define PFX_FILE_PSW L"123456789"
 
+#define MY_ENCODING_TYPE  (PKCS_7_ASN_ENCODING | X509_ASN_ENCODING)
+
 std::string GetErrorString(LPCTSTR psz);
 
 //-------------------------------------------------------------------
 //    MyHandleError
 void MyHandleError(LPCTSTR psz)
 {
-	_ftprintf(stderr, TEXT("An error occurred in the program. \n"));
-	_ftprintf(stderr, TEXT("%s\n"), psz);
+	_ftprintf(stderr, GetErrorString(psz).c_str());
 	_ftprintf(stderr, TEXT("Error number %x.\n"), GetLastError());
-	_ftprintf(stderr, TEXT("Program terminating. \n"));
 } // End of MyHandleError
 
 BOOL saveBlobToFile(CRYPT_DATA_BLOB * pBlob, const CHAR * pFileName)
@@ -313,8 +313,8 @@ std::string SCD_Crypto::Get_SmartCard_RSAFull_certificate()
 			break;
 		}
 
-		std::ofstream pemCertFile("cert.pem", std::ios::out | std::ios::binary);
-		pemCertFile.write((const char *)pCertString, dwCertStringLen);
+		//std::ofstream pemCertFile("cert.pem", std::ios::out | std::ios::binary);
+		//pemCertFile.write((const char *)pCertString, dwCertStringLen);
 
 		m_Certificate = pCertString;
 		retval = pCertString;
@@ -325,6 +325,302 @@ std::string SCD_Crypto::Get_SmartCard_RSAFull_certificate()
 	if (hProv != 0) CryptReleaseContext(hProv, 0);
 	if (NULL != pCertBlob) free(pCertBlob);
 	if (NULL != pCertString) free(pCertString);
+
+	return retval;
+
+}
+
+bool SCD_Crypto::SignMessage_With_SmartCard(CRYPT_DATA_BLOB * pSignedMessageBlob, CRYPT_DATA_BLOB * pData)
+{
+	bool retval = FALSE;
+
+	HCRYPTPROV hProv = 0;
+	HCRYPTKEY hKey = 0;
+	BOOL fStatus;
+	SCARDCONTEXT hSC;
+	OPENCARDNAME_EX dlgStruct;
+
+	LONG lReturn;
+	DWORD lStatus;
+	DWORD dwCertLen;
+	DWORD dwCertStringLen;
+	BYTE* pCertBlob = NULL;
+	PCCERT_CONTEXT pSignerCert = NULL;
+
+	DWORD nParamLength = BUFFER_SIZE;
+
+	CRYPT_SIGN_MESSAGE_PARA  SigParams;
+	// Create the MessageArray and the MessageSizeArray.
+	const BYTE* MessageArray[] = { pData->pbData };
+	DWORD MessageSizeArray;
+	MessageSizeArray = pData->cbData;
+
+	DWORD cbSignedMessageBlob;
+	BYTE  *pbSignedMessageBlob = NULL;
+
+	m_Certificate.clear();
+
+	// Establish a context.
+
+	// It will be assigned to the structure's hSCardContext field.
+	do {
+
+		lReturn = SCardEstablishContext(
+			SCARD_SCOPE_USER,
+			NULL,
+			NULL,
+			&hSC);
+
+		if (SCARD_S_SUCCESS != lReturn)
+		{
+			SetLastError(lReturn);
+			MyHandleError(_T("Failed SCardEstablishContext"));
+			break;
+		}
+
+		// Initialize the structure.
+
+		memset(&dlgStruct, 0, sizeof(dlgStruct));
+		dlgStruct.dwStructSize = sizeof(dlgStruct);
+		dlgStruct.hSCardContext = hSC;
+		dlgStruct.dwFlags = SC_DLG_FORCE_UI;
+		dlgStruct.lpstrRdr = m_szReader;
+		dlgStruct.nMaxRdr = BUFFER_SIZE;
+		dlgStruct.lpstrCard = m_szCard;
+		dlgStruct.nMaxCard = BUFFER_SIZE;
+		dlgStruct.lpstrTitle = _T("My Select Card Title");
+
+		// Display the select card dialog box.
+
+		lReturn = SCardUIDlgSelectCard(&dlgStruct);
+
+		if (SCARD_S_SUCCESS != lReturn)
+		{
+			SetLastError(lReturn);
+			MyHandleError(_T("Failed SCardUIDlgSelectCard"));
+			break;
+		}
+		_tprintf(_T("Reader: %s\nCard: %s\n"), m_szReader, m_szCard);
+
+		nParamLength = BUFFER_SIZE;
+		lStatus = SCardGetCardTypeProviderName(
+			dlgStruct.hSCardContext, // SCARDCONTEXT hContext,
+			dlgStruct.lpstrCard, // LPCTSTR szCardName,
+			SCARD_PROVIDER_CSP, // DWORD dwProviderId,
+			m_pProviderName, // LPTSTR szProvider,
+			&nParamLength // LPDWORD* pcchProvider
+		);
+
+		_tprintf(_T("SCardGetCardTypeProviderName returned: %u (a value of 0 is success)\n"), lStatus);
+
+		if (SCARD_S_SUCCESS != lReturn)
+		{
+			SetLastError(lStatus);
+			MyHandleError(_T("Failed SCardGetCardTypeProviderName"));
+			break;
+		}
+		_tprintf(_T("Provider name: %s.\n"), m_pProviderName);
+
+		fStatus = CryptAcquireContext(
+			&hProv, // HCRYPTPROV* phProv,
+			NULL, // LPCTSTR pszContainer,
+			m_pProviderName, // LPCTSTR pszProvider,
+			PROV_RSA_FULL, // DWORD dwProvType,
+			CRYPT_VERIFYCONTEXT // DWORD dwFlags
+		);
+
+		if (!fStatus)
+		{
+			MyHandleError(_T("CryptAcquireContext failed"));
+			break;
+		}
+
+		_tprintf(_T("CryptAcquireContext succeeded.\n"));
+
+		//---------------------------------------------------------------
+		// Read the name of the key container.
+		nParamLength = BUFFER_SIZE;
+		fStatus = CryptGetProvParam(
+			hProv,
+			PP_ENUMCONTAINERS,
+			(BYTE*)m_pContainer,
+			&nParamLength,
+			CRYPT_FIRST);
+
+		if (!fStatus)
+		{
+			MyHandleError(TEXT("Error reading key container name.\n"));
+			break;
+		}
+		_tprintf(TEXT("CryptGetProvParam succeeded.\n"));
+		printf("Key Container name: %s\n", m_pContainer);
+
+		CryptReleaseContext(hProv, 0);
+		hProv = 0;
+
+		fStatus = CryptAcquireContext(
+			&hProv, // HCRYPTPROV* phProv,
+			m_pContainer, // LPCTSTR pszContainer,
+			m_pProviderName, // LPCTSTR pszProvider,
+			PROV_RSA_FULL, // DWORD dwProvType,
+			0 // DWORD dwFlags
+		);
+
+		if (!fStatus)
+		{
+			MyHandleError(_T("CryptAcquireContext failed"));
+			break;
+		}
+		_tprintf(_T("CryptAcquireContext succeeded.\n"));
+
+		fStatus = CryptGetUserKey(
+			hProv, // HCRYPTPROV hProv,
+			AT_KEYEXCHANGE, // DWORD dwKeySpec,
+			&hKey // HCRYPTKEY* phUserKey
+		);
+
+		if (!fStatus)
+		{
+			MyHandleError(_T("CryptGetUserKey failed"));
+			break;
+		}
+
+		_tprintf(_T("CryptGetUserKey succeeded.\n"));
+
+		dwCertLen = 0;
+
+		fStatus = CryptGetKeyParam(
+			hKey, // HCRYPTKEY hKey,
+			KP_CERTIFICATE, // DWORD dwParam,
+			NULL, // BYTE* pbData,
+			&dwCertLen, // DWORD* pdwDataLen,
+			0 // DWORD dwFlags
+		);
+
+		if (!fStatus)
+		{
+			MyHandleError(_T("CryptGetKeyParam failed"));
+			break;
+		}
+
+		_tprintf(_T("CryptGetKeyParam Cert Length succeeded.\n"));
+		_tprintf(_T("dwCertLen: %u\n"), dwCertLen);
+
+		pCertBlob = (BYTE*)malloc(dwCertLen);
+		fStatus = CryptGetKeyParam(
+			hKey, // HCRYPTKEY hKey,
+			KP_CERTIFICATE, // DWORD dwParam,
+			pCertBlob, // BYTE* pbData,
+			&dwCertLen, // DWORD* pdwDataLen,
+			0 // DWORD dwFlags
+		);
+
+		if (!fStatus)
+		{
+			MyHandleError(_T("CryptGetKeyParam failed"));
+			break;
+		}
+
+		_tprintf(_T("CryptGetKeyParam Cert Blob succeeded.\n"));
+
+		pSignerCert = CertCreateCertificateContext(
+			MY_ENCODING_TYPE,
+			pCertBlob,
+			dwCertLen);
+
+		// Initialize the signature structure.
+		SigParams.cbSize = sizeof(CRYPT_SIGN_MESSAGE_PARA);
+		SigParams.dwMsgEncodingType = MY_ENCODING_TYPE;
+		SigParams.pSigningCert = pSignerCert;
+		SigParams.HashAlgorithm.pszObjId = (LPSTR)szOID_RSA_SHA256RSA;//szOID_RSA_SHA1RSA;
+		SigParams.HashAlgorithm.Parameters.cbData = NULL;
+		SigParams.cMsgCert = 1;
+		SigParams.rgpMsgCert = &pSignerCert;
+		SigParams.cAuthAttr = 0;
+		SigParams.dwInnerContentType = 0;
+		SigParams.cMsgCrl = 0;
+		SigParams.cUnauthAttr = 0;
+		SigParams.dwFlags = 0;
+		SigParams.pvHashAuxInfo = NULL;
+		SigParams.rgAuthAttr = NULL;
+
+		fStatus = CryptSignMessage(
+			&SigParams,
+			FALSE,
+			1,
+			MessageArray,
+			&MessageSizeArray,
+			NULL,
+			&cbSignedMessageBlob);
+
+		if (!fStatus)
+		{
+			MyHandleError(_T("CryptSignMessage - Get blob size failed"));
+			break;
+		}
+
+		_tprintf(_T("CryptSignMessage Blob Size %u.\n"), cbSignedMessageBlob);
+
+		// Allocate memory for the signed BLOB.
+		if (!(pbSignedMessageBlob =
+			(BYTE*)malloc(cbSignedMessageBlob)))
+		{
+			MyHandleError(
+				TEXT("Memory allocation error while signing."));
+			break;
+		}
+
+		fStatus = CryptSignMessage(
+			&SigParams,
+			FALSE,
+			1,
+			MessageArray,
+			&MessageSizeArray,
+			pbSignedMessageBlob,
+			&cbSignedMessageBlob);
+
+		if (!fStatus)
+		{
+			MyHandleError(_T("CryptSignMessage failed"));
+			break;
+		}
+
+		_tprintf(TEXT("The message was signed successfully. \n"));
+
+		retval = TRUE;
+
+	} while (FALSE);
+
+	if (pSignerCert)
+	{
+		CertFreeCertificateContext(pSignerCert);
+	}
+
+	//if (hCertStore)
+	//{
+	//	CertCloseStore(hCertStore, CERT_CLOSE_STORE_CHECK_FLAG);
+	//	hCertStore = NULL;
+	//}
+
+	// Only free the signed message if a failure occurred.
+	if (retval)
+	{
+		if (pbSignedMessageBlob)
+		{
+			free(pbSignedMessageBlob);
+			pbSignedMessageBlob = NULL;
+		}
+	}
+
+	if (pbSignedMessageBlob)
+	{
+		pSignedMessageBlob->cbData = cbSignedMessageBlob;
+		pSignedMessageBlob->pbData = pbSignedMessageBlob;
+	}
+
+	if (hKey != 0) CryptDestroyKey(hKey);
+	if (hProv != 0) CryptReleaseContext(hProv, 0);
+	if (NULL != pCertBlob) free(pCertBlob);
 
 	return retval;
 
@@ -754,8 +1050,6 @@ std::string SCD_Crypto::encrypt_decrypt_test()
 
 // Link with the Crypt32.lib file.
 #pragma comment (lib, "Crypt32")
-
-#define MY_ENCODING_TYPE  (PKCS_7_ASN_ENCODING | X509_ASN_ENCODING)
 
 //-------------------------------------------------------------------
 //   Define the name of a certificate subject.
@@ -1226,7 +1520,7 @@ BOOL SCD_Crypto::Import_SelfSigned_RSAFull_certificate()
 }
 
 // https://groups.google.com/forum/#!topic/microsoft.public.platformsdk.security/Q4xmlRRug-0
-
+/*
 int SCD_Crypto::Export_SelfSigned_RSAFull_certificate()
 {
 	//-------------------------------------------------------------------
@@ -1405,3 +1699,4 @@ int SCD_Crypto::Export_SelfSigned_RSAFull_certificate()
 	return 0;
 
 }
+*/
