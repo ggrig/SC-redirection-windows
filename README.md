@@ -12,6 +12,7 @@ The solution implements WebSocket server on Windows 10 and communicates to Ubunt
  - Run the server-demo.html from the JavaScript folder
  - Run the WebSocket-server-demo project in Visual Studio debugger
  - Run the Ubuntu server
+ - Refresh server-demo.html (press F5 in Chrome)
  - Communicate to both servers from within the server-demo.html issuing commands with the buttons
 
 ## Cryptography
