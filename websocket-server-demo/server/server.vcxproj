@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="scd_crypto.h" />
     <ClInclude Include="scd_pcsc.h" />
+    <ClInclude Include="tcptunnel.h" />
     <ClInclude Include="WebsocketServer.h" />
   </ItemGroup>
   <ItemGroup>
@@ -28,6 +29,9 @@
     <ClCompile Include="scd_crypto.cpp" />
     <ClCompile Include="scd_pcsc.cpp" />
     <ClCompile Include="server.cpp" />
+    <ClCompile Include="tcptunnel.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="WebsocketServer.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
