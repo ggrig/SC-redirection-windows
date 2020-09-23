@@ -17,6 +17,8 @@
 
 #define PATH_SEPARATOR '/'
 
+#define OPTIONS_BUFFER_SIZE 4096
+
 const char *name;
 
 int build_server(void);
@@ -27,8 +29,12 @@ int build_tunnel(void);
 int use_tunnel(void);
 int fd(void);
 
+#ifdef __MINGW32__
+void set_option(char option, char *optarg);
+#else
 void set_options(int argc, char *argv[]);
 void set_option(char **option, char *value);
+#endif
 
 char *get_current_timestamp(void);
 
@@ -56,13 +62,21 @@ struct struct_options {
 	const char *remote_port;
 	const char *bind_address;
 	const char *client_address;
+#ifndef __MINGW32__
 	unsigned int buffer_size;
+#endif
 };
 
 struct struct_rc {
+#ifdef __MINGW32__
+	SOCKET server_socket;
+	SOCKET client_socket;
+	SOCKET remote_socket;
+#else
 	int server_socket;
 	int client_socket;
 	int remote_socket;
+#endif
 
 	struct sockaddr_in server_addr;
 	struct sockaddr_in client_addr;

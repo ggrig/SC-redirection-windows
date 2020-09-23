@@ -29,9 +29,7 @@
     <ClCompile Include="scd_crypto.cpp" />
     <ClCompile Include="scd_pcsc.cpp" />
     <ClCompile Include="server.cpp" />
-    <ClCompile Include="tcptunnel.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="tcptunnel.c" />
     <ClCompile Include="WebsocketServer.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -126,7 +124,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_WEBSOCKETPP_CPP11_INTERNAL_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_WEBSOCKETPP_CPP11_INTERNAL_;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>.;..\lib_json;..\external;</AdditionalIncludeDirectories>
     </ClCompile>
@@ -166,7 +164,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_WEBSOCKETPP_CPP11_INTERNAL_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_WEBSOCKETPP_CPP11_INTERNAL_;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>.;..\lib_json;..\external;</AdditionalIncludeDirectories>
     </ClCompile>
