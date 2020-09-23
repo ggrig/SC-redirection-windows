@@ -1,6 +1,10 @@
 #ifndef TCPTUNNEL_H
 #define TCPTUNNEL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define VERSION "0.8"
 
 #define LOCAL_PORT_OPTION     'a'
@@ -19,6 +23,10 @@
 
 #define OPTIONS_BUFFER_SIZE 4096
 
+#ifndef __MINGW32__
+#define __MINGW32__
+#endif
+
 const char *name;
 
 int build_server(void);
@@ -30,7 +38,7 @@ int use_tunnel(void);
 int fd(void);
 
 #ifdef __MINGW32__
-void set_option(char option, char *optarg);
+void set_option(char option, const char *optarg);
 #else
 void set_options(int argc, char *argv[]);
 void set_option(char **option, char *value);
@@ -86,3 +94,8 @@ struct struct_rc {
 
 #endif
 
+boolean stay_alive();
+
+#ifdef __cplusplus
+}
+#endif

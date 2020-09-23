@@ -26,7 +26,9 @@
 #include <sys/types.h>
 #include <time.h>
 
+#ifndef __MINGW32__
 #define __MINGW32__
+#endif
 
 #ifdef __MINGW32__
 #define required_argument 0
@@ -46,6 +48,11 @@
 struct struct_rc rc;
 struct struct_options options;
 struct struct_settings settings = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+boolean stay_alive()
+{
+	return settings.stay_alive;
+}
 
 #ifdef TCP_TUNNEL_STANDALONE
 static struct option long_options[] = {
@@ -219,7 +226,7 @@ void set_options(int argc, char *argv[])
 }
 #endif
 
-void set_option(char option, char *optarg)
+void set_option(char option, const char *optarg)
 {
 	switch (option)
 	{
