@@ -18,38 +18,15 @@
  *
  */
 
-#include <errno.h>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <time.h>
-
-#ifndef __MINGW32__
-#define __MINGW32__
-#endif
-
-#ifdef __MINGW32__
-#define required_argument 0
-#define no_argument 0
-#include <winsock2.h>
-#else
-#include <getopt.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#endif
-
 #include "tcptunnel.h"
+
+const char *name;
 
 struct struct_rc rc;
 struct struct_options options;
 struct struct_settings settings = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-boolean stay_alive()
+int stay_alive()
 {
 	return settings.stay_alive;
 }
@@ -461,9 +438,13 @@ int use_tunnel(void)
 
 		memset(buffer, 0, sizeof(buffer));
 
+#ifdef __MINGW32__
 		int select_value = select(fd(), &io, NULL, NULL, NULL);
 
 		if (select_value == 0 || select_value >= WSABASEERR)
+#else
+		if (select(fd(), &io, NULL, NULL, NULL) < 0)
+#endif
 		{
 			perror("use_tunnel: select()");
 			break;

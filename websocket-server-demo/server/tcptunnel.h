@@ -1,6 +1,27 @@
 #ifndef TCPTUNNEL_H
 #define TCPTUNNEL_H
 
+#include <errno.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <time.h>
+
+#ifdef __MINGW32__
+#define required_argument 0
+#define no_argument 0
+#include <winsock2.h>
+#else
+#include <getopt.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -22,12 +43,6 @@ extern "C" {
 #define PATH_SEPARATOR '/'
 
 #define OPTIONS_BUFFER_SIZE 4096
-
-#ifndef __MINGW32__
-#define __MINGW32__
-#endif
-
-const char *name;
 
 int build_server(void);
 int wait_for_clients(void);
@@ -94,7 +109,7 @@ struct struct_rc {
 
 #endif
 
-boolean stay_alive();
+int stay_alive();
 
 #ifdef __cplusplus
 }
