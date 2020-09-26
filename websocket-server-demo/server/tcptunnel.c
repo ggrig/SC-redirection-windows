@@ -205,6 +205,10 @@ void set_options(int argc, char *argv[])
 
 void set_option(char option, const char *optarg)
 {
+#ifndef __MINGW32__
+	options.buffer_size = 4096;
+#endif
+
 	switch (option)
 	{
 		case LOCAL_PORT_OPTION:
@@ -235,12 +239,14 @@ void set_option(char option, const char *optarg)
 			break;
 		}
 
-		//case BUFFER_SIZE_OPTION:
-		//{
-		//	options.buffer_size = atoi(optarg);
-		//	settings.buffer_size = 1;
-		//	break;
-		//}
+#ifndef __MINGW32__
+		case BUFFER_SIZE_OPTION:
+		{
+			options.buffer_size = atoi(optarg);
+			settings.buffer_size = 1;
+			break;
+		}
+#endif
 
 		case CLIENT_ADDRESS_OPTION:
 		{
