@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
 	std::thread serverThread([&server]() {
 		server.run();
 	});
-	
+
 	//Start a keyboard input thread that reads from stdin
 	std::thread inputThread([&server, &mainEventLoop]()
 	{
@@ -73,15 +73,15 @@ int main(int argc, char* argv[])
 	});
 
 	//Start tcptunnel thread
-	//  ./tcptunnel.exe --local-port=23240 --remote-port=3240 --remote-host=127.0.0.1 --stay-alive
-	std::thread tcptunnel([]() {
+	std::thread tcptunnel([&server]() {
+		//  ./tcptunnel.exe --local-port=23240 --remote-port=3240 --remote-host=127.0.0.1 --stay-alive
 		set_option(LOCAL_PORT_OPTION, "23240");
 		set_option(REMOTE_PORT_OPTION, "3240");
 		set_option(REMOTE_HOST_OPTION, "127.0.0.1");
 		set_option(STAY_ALIVE_OPTION, "");
 		set_option(LOG_OPTION, "");
 
-		tcptunnel_loop();
+		tcptunnel_loop(server);
 	});
 	
 	//Start the event loop for the main thread

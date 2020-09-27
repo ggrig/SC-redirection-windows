@@ -29,7 +29,7 @@
     <ClCompile Include="scd_crypto.cpp" />
     <ClCompile Include="scd_pcsc.cpp" />
     <ClCompile Include="server.cpp" />
-    <ClCompile Include="tcptunnel.c" />
+    <ClCompile Include="tcptunnel.cpp" />
     <ClCompile Include="WebsocketServer.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

@@ -258,6 +258,11 @@ boolean WebsocketServer::messageParse(ClientConnection conn, string message)
 	std::clog << " Command: " << msg[0] << "\n";
 	std::clog << " Data: " << msg[1] << "\n";
 
+	if (NULL != rcv_callback)
+	{
+		const char *p = "WebsocketSever message";
+		rcv_callback((char*)p);
+	}
 
 	// Read the ATR code (for diagnostic use, or code detection)
 	if (msg[0] == commands.at(C_ATR))
