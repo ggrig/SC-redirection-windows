@@ -79,39 +79,9 @@ int main(int argc, char* argv[])
 		set_option(REMOTE_PORT_OPTION, "3240");
 		set_option(REMOTE_HOST_OPTION, "127.0.0.1");
 		set_option(STAY_ALIVE_OPTION, "");
-#if 0
-#ifdef __MINGW32__
-			WSADATA info;
-			if (WSAStartup(MAKEWORD(1, 1), &info) != 0)
-			{
-				perror("main: WSAStartup()");
-				exit(1);
-			}
-#endif
+		set_option(LOG_OPTION, "");
 
-			name = argv[0];
-
-			set_options(argc, argv);
-#endif
-			if (build_server() == 1)
-			{
-				exit(1);
-			}
-
-#ifndef __MINGW32__
-			signal(SIGCHLD, SIG_IGN);
-#endif
-
-			do
-			{
-				if (wait_for_clients() == 0)
-				{
-					handle_client();
-				}
-			} while (stay_alive());
-#if 0
-			close(rc.server_socket);
-#endif
+		tcptunnel_loop();
 	});
 	
 	//Start the event loop for the main thread
