@@ -226,7 +226,7 @@ void split(const string& s, char c,
  * @param conn
  * @param message
  */
-boolean WebsocketServer::messageParse(ClientConnection conn, string message)
+bool WebsocketServer::messageParse(ClientConnection conn, string message)
 {
 	string code;
 	int err;

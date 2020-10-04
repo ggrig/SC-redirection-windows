@@ -74,7 +74,7 @@ private:
 
 	void resetAuthentication();
 
-	boolean messageParse(ClientConnection conn, string message);
+	bool messageParse(ClientConnection conn, string message);
 
 	callback_function rcv_callback = NULL;
 

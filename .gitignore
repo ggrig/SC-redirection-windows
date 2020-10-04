@@ -10,3 +10,7 @@ websocket-server-demo/.vs/
 websocket-server-demo/lib_json/x64/
 websocket-server-demo/server/x64/
 websocket-server-demo/x64/
+
+websocket-server-demo/server/sig.bin
+websocket-server-demo/server/sig64.txt
+websocket-server-demo/server/toSign.txt
