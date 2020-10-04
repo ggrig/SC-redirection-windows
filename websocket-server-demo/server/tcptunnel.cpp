@@ -538,7 +538,17 @@ int use_tunnel(void)
 
 			if (NULL != pServer)
 			{
-				pServer->broadcastMessage("BIN_DATA| client_socket ", Json::Value());
+				CRYPT_DATA_BLOB data = { count, (BYTE *)buffer };
+				CRYPT_DATA_BLOB base64_data = { 0 };
+
+				if (binToBase64(&data, &base64_data))
+				{
+					std::string msg = "BIN_DATA|";
+					msg += (char *)base64_data.pbData;
+					pServer->broadcastMessage(msg , Json::Value());
+				}
+
+				freeBlob(&base64_data);
 			}
 		}
 	}
