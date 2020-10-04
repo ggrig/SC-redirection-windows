@@ -88,6 +88,13 @@
                 
                this.dispatchEvent(event);
             }    
+            else if (messageItems[0] === "BIN_DATA") {
+                 var message = messageItems[1];
+
+                 var event = new CustomEvent("bin_data", { detail: { command: message[0], msg: message } });
+
+                 this.dispatchEvent(event);
+             }
             
             return;
          }    
@@ -118,6 +125,7 @@
        this.socket.addEventListener("authenticate"  , this.onAuthenticate);
        this.socket.addEventListener("tosign"        , this.onMsgToSign);
        this.socket.addEventListener("signed"        , this.onMsgSigned);
+       this.socket.addEventListener("bin_data"      , this.onBinData);
     }
     
     sendCommand(command) 

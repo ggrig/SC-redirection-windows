@@ -187,6 +187,14 @@
 	   remote.sendCommand("SIGNED:" + e.detail.msg);
     };
 
+    client.onBinData = function (e) {
+       clear(maxEle);
+
+       append("Command: " + e.detail.command + " => bin_data: " + e.detail.msg);
+
+       remote.sendCommand("BIN_DATA:" + e.detail.msg);
+    };
+
 // Remote Web server event handlers
 
 	remote.onMsgToSign =  function(e)
@@ -204,7 +212,15 @@
 
        append("Command: " + e.detail.command + " => error: " + e.detail.error);
     };
-	
+
+    remote.onBinData = function (e) {
+       clear(maxEle);
+
+       append("Command: " + e.detail.command + " => bin_data: " + e.detail.msg);
+
+       client.sendCommand("BIN_DATA:" + e.detail.msg);
+    };
+
     remote.opened = function(e)
     {
        setData(" Opened");
