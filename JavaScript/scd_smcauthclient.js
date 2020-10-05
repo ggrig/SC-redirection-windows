@@ -25,6 +25,7 @@
       this.onAuthenticate   = function(e){};
       this.onMsgToSign      = function(e){};
       this.onMsgSigned      = function(e){};
+      this.onBinData        = function(e){};
                               
       this.onmessage = function(event)
       {
@@ -94,8 +95,10 @@
                  var event = new CustomEvent("bin_data", { detail: { command: message[0], msg: message } });
 
                  this.dispatchEvent(event);
-             }
-            
+                console.log("BIN_DATA event dispatched");
+            }
+
+             console.log(messageItems[0] + " Not found");
             return;
          }    
          
@@ -169,5 +172,10 @@
 	 msgSigned()
 	 {
         return this.sendCommand("SIGNED:");   
-	 }	 
+     }
+
+     msgBindata()
+     {
+        return this.sendCommand("BIN_DATA:");
+     }
   }

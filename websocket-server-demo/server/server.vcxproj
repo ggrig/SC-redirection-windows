@@ -36,6 +36,11 @@
     <ClCompile Include="utils.cpp" />
     <ClCompile Include="WebsocketServer.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\JavaScript\scd_smcauthclient.js" />
+    <None Include="..\..\JavaScript\server-demo.html" />
+    <None Include="..\..\JavaScript\server-demo.html.js" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{494523B1-F38F-43F7-AD3F-01B88C352976}</ProjectGuid>

@@ -193,6 +193,7 @@
        append("Command: " + e.detail.command + " => bin_data: " + e.detail.msg);
 
        remote.sendCommand("BIN_DATA:" + e.detail.msg);
+        console.log("BIN_DATA -> remote");
     };
 
 // Remote Web server event handlers
@@ -213,13 +214,14 @@
        append("Command: " + e.detail.command + " => error: " + e.detail.error);
     };
 
-    remote.onBinData = function (e) {
-       clear(maxEle);
+    //remote.onBinData = function (e) {
+    //   clear(maxEle);
 
-       append("Command: " + e.detail.command + " => bin_data: " + e.detail.msg);
+    //   append("Command: " + e.detail.command + " => bin_data: " + e.detail.msg);
 
-       client.sendCommand("BIN_DATA:" + e.detail.msg);
-    };
+    //   client.sendCommand("BIN_DATA:" + e.detail.msg);
+    //    console.log("BIN_DATA -> local");
+    //};
 
     remote.opened = function(e)
     {
