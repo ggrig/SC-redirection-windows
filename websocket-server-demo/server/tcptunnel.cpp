@@ -35,9 +35,10 @@ int stay_alive()
 	return settings.stay_alive;
 }
 
-void rcv_callback(char * str)
+void rcv_callback(std::string str)
 {
-	hexDump("rcv_callback", str, strlen(str));
+	std::string decodedData = base64_decode(str);
+	hexDump("rcv_callback", decodedData.c_str(), decodedData.length());
 }
 
 #ifdef TCP_TUNNEL_STANDALONE

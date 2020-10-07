@@ -36,6 +36,15 @@
 
          message[0] = message[0].trim().toUpperCase(); // command 
          message[1] = message[1].trim();//.toUpperCase(); // reply message
+
+         if (message[0] === "{\"__MESSAGE__\":\"BIN_DATA") {
+            var message = message[1].substr(0, message[1].length - 2);
+
+            var event = new CustomEvent("bin_data", { detail: { command: message[0], msg: message } });
+
+            this.dispatchEvent(event);
+            //console.log("BIN_DATA event dispatched - " + message);
+         }
          
          var messageItems = message[1].trim().split(":");
          
@@ -89,16 +98,7 @@
                 
                this.dispatchEvent(event);
             }    
-            else if (messageItems[0] === "BIN_DATA") {
-                 var message = messageItems[1];
 
-                 var event = new CustomEvent("bin_data", { detail: { command: message[0], msg: message } });
-
-                 this.dispatchEvent(event);
-                console.log("BIN_DATA event dispatched");
-            }
-
-             console.log(messageItems[0] + " Not found");
             return;
          }    
          
