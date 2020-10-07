@@ -29,6 +29,7 @@ struct struct_options options;
 struct struct_settings settings = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 WebsocketServer * pServer = NULL;
+std::string decodedData;
 
 int stay_alive()
 {
@@ -37,8 +38,11 @@ int stay_alive()
 
 void rcv_callback(std::string str)
 {
-	std::string decodedData = base64_decode(str);
-	hexDump("rcv_callback", decodedData.c_str(), decodedData.length());
+	decodedData = base64_decode(str);
+	if (settings.log)
+	{
+		hexDump("rcv_callback", decodedData.c_str(), decodedData.length());
+	}
 }
 
 #ifdef TCP_TUNNEL_STANDALONE
@@ -468,6 +472,18 @@ int use_tunnel(void)
 
 		if (FD_ISSET(rc.client_socket, &io))
 		{
+			if (decodedData.length() > 0)
+			{
+				send(rc.remote_socket, decodedData.c_str(), decodedData.length(), 0);
+				if (settings.log)
+				{
+					printf("to remote_socket ");
+					hexDump(get_current_timestamp(), decodedData.c_str(), decodedData.length());
+				}
+				//TBD: mutex here
+				decodedData.clear();
+			}
+
 			int count = recv(rc.client_socket, buffer, sizeof(buffer), 0);
 			if (count < 0)
 			{
@@ -494,13 +510,13 @@ int use_tunnel(void)
 				return 0;
 			}
 
-			send(rc.remote_socket, buffer, count, 0);
+			//send(rc.remote_socket, buffer, count, 0);
 
-			if (settings.log)
-			{
-				printf("to remote_socket ");
-				hexDump(get_current_timestamp(), buffer, count);
-			}
+			//if (settings.log)
+			//{
+			//	printf("to remote_socket ");
+			//	hexDump(get_current_timestamp(), buffer, count);
+			//}
 		}
 
 		if (FD_ISSET(rc.remote_socket, &io))
