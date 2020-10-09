@@ -30,7 +30,7 @@ struct struct_options options;
 struct struct_settings settings = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 WebsocketServer * pServer = NULL;
-CTMultiThreadSingleQueue<std::string> decodedData;
+CTMultiThreadSingleQueue<std::string> client_socket_data;
 
 int stay_alive()
 {
@@ -40,7 +40,7 @@ int stay_alive()
 void rcv_callback(std::string str)
 {
 	std::string decoded = base64_decode(str);
-	decodedData.Push(decoded);
+	client_socket_data.Push(decoded);
 	if (settings.log)
 	{
 		hexDump("rcv_callback", decoded.c_str(), decoded.length());
@@ -472,19 +472,21 @@ int use_tunnel(void)
 			break;
 		}
 
-		if (FD_ISSET(rc.client_socket, &io))
+		if (client_socket_data.GetSize() > 0)
 		{
-			if (decodedData.GetSize() > 0)
+			std::string decoded;
+			client_socket_data.Pop(decoded);
+			send(rc.remote_socket, decoded.c_str(), decoded.length(), 0);
+			if (settings.log)
 			{
-				std::string decoded;
-				decodedData.Pop(decoded);
-				send(rc.remote_socket, decoded.c_str(), decoded.length(), 0);
-				if (settings.log)
-				{
-					printf("to remote_socket ");
-					hexDump(get_current_timestamp(), decoded.c_str(), decoded.length());
-				}
+				printf("to remote_socket ");
+				hexDump(get_current_timestamp(), decoded.c_str(), decoded.length());
 			}
+		}
+
+		if (0)
+		//if (FD_ISSET(rc.client_socket, &io))
+		{
 
 			int count = recv(rc.client_socket, buffer, sizeof(buffer), 0);
 			if (count < 0)
@@ -512,13 +514,13 @@ int use_tunnel(void)
 				return 0;
 			}
 
-			//send(rc.remote_socket, buffer, count, 0);
+			send(rc.remote_socket, buffer, count, 0);
 
-			//if (settings.log)
-			//{
-			//	printf("to remote_socket ");
-			//	hexDump(get_current_timestamp(), buffer, count);
-			//}
+			if (settings.log)
+			{
+				printf("to remote_socket ");
+				hexDump(get_current_timestamp(), buffer, count);
+			}
 		}
 
 		if (FD_ISSET(rc.remote_socket, &io))
