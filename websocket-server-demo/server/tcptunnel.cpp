@@ -21,6 +21,7 @@
 #include "utils.h"
 #include "base64.h"
 #include "tcptunnel.h"
+#include "TMultiThreadSingleQueue.h"
 
 const char *name;
 
@@ -29,7 +30,7 @@ struct struct_options options;
 struct struct_settings settings = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 WebsocketServer * pServer = NULL;
-std::string decodedData;
+CTMultiThreadSingleQueue<std::string> decodedData;
 
 int stay_alive()
 {
@@ -38,10 +39,11 @@ int stay_alive()
 
 void rcv_callback(std::string str)
 {
-	decodedData = base64_decode(str);
+	std::string decoded = base64_decode(str);
+	decodedData.Push(decoded);
 	if (settings.log)
 	{
-		hexDump("rcv_callback", decodedData.c_str(), decodedData.length());
+		hexDump("rcv_callback", decoded.c_str(), decoded.length());
 	}
 }
 
@@ -472,16 +474,16 @@ int use_tunnel(void)
 
 		if (FD_ISSET(rc.client_socket, &io))
 		{
-			if (decodedData.length() > 0)
+			if (decodedData.GetSize() > 0)
 			{
-				send(rc.remote_socket, decodedData.c_str(), decodedData.length(), 0);
+				std::string decoded;
+				decodedData.Pop(decoded);
+				send(rc.remote_socket, decoded.c_str(), decoded.length(), 0);
 				if (settings.log)
 				{
 					printf("to remote_socket ");
-					hexDump(get_current_timestamp(), decodedData.c_str(), decodedData.length());
+					hexDump(get_current_timestamp(), decoded.c_str(), decoded.length());
 				}
-				//TBD: mutex here
-				decodedData.clear();
 			}
 
 			int count = recv(rc.client_socket, buffer, sizeof(buffer), 0);

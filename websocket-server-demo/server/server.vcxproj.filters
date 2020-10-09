@@ -36,6 +36,9 @@
     <ClInclude Include="base64.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TMultiThreadSingleQueue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="server.cpp">
