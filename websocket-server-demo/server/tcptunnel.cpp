@@ -31,6 +31,7 @@ struct struct_settings settings = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 WebsocketServer * pServer = NULL;
 CTMultiThreadSingleQueue<std::string> client_socket_data;
+CTMultiThreadSingleQueue<std::string> remote_socket_data;
 
 int stay_alive()
 {
@@ -41,6 +42,16 @@ void rcv_callback(std::string str)
 {
 	std::string decoded = base64_decode(str);
 	client_socket_data.Push(decoded);
+	if (settings.log)
+	{
+		hexDump("rcv_callback", decoded.c_str(), decoded.length());
+	}
+}
+
+void send_callback(std::string str)
+{
+	std::string decoded = base64_decode(str);
+	remote_socket_data.Push(decoded);
 	if (settings.log)
 	{
 		hexDump("rcv_callback", decoded.c_str(), decoded.length());
