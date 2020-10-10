@@ -498,7 +498,6 @@ int use_tunnel(void)
 		if (0)
 		//if (FD_ISSET(rc.client_socket, &io))
 		{
-
 			int count = recv(rc.client_socket, buffer, sizeof(buffer), 0);
 			if (count < 0)
 			{

@@ -56,11 +56,6 @@ private:
 
 	ServerType type;
 
-	SCD_PCSC cardReader;
-	SCD_PCSC::card_data data;
-
-	SCD_Crypto crypto;
-
 	string lastError;
 	string atr = "";
 
@@ -70,10 +65,6 @@ private:
 	int isAuthenticated = 0;
 
 	bool permanentConnection;
-
-	string getCardCode(SCD_PCSC::card_data *data, int *err);
-
-	void resetAuthentication();
 
 	bool messageParse(ClientConnection conn, string message);
 

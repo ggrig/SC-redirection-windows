@@ -180,33 +180,6 @@ std::string hexStr(BYTE *data, int len)
 	return ss.str();
 }
 
-std::string WebsocketServer::getCardCode(SCD_PCSC::card_data *data, int *err)
-{
-	std::string cdata;
-
-	*err = data->error;
-
-	if (data->error)
-	{
-		cdata = data->errmsg;
-
-		return cdata;
-	}
-
-	cdata = hexStr(data->data, data->datalen);
-
-	return cdata;
-}
-
-/**
- * @brief WebsocketServer::resetAuthentication
- */
-void WebsocketServer::resetAuthentication()
-{
-	isAuthenticated = 0;
-	atr = "";
-}
-
 void split(const string& s, char c,
 	vector<string>& v) {
 	string::size_type i = 0;
@@ -271,91 +244,21 @@ bool WebsocketServer::messageParse(ClientConnection conn, string message)
 	// Read the ATR code (for diagnostic use, or code detection)
 	if (msg[0] == commands.at(C_ATR))
 	{
-		data = cardReader.CheckCard();
-
-		if (data.atrvalid)           // if readed ATR code is valid
-		{
-			code = getCardCode(&data, &err);
-
-			std::clog << "Login: " << code << "\n";
-
-			sendMessage(conn, msg[0] + "|ATR:" + code.c_str(), Json::Value());
-		}
-		else
-		{
-			std::clog << data.errmsg << "\n";
-
-			sendMessage(conn, msg[0] + "|" + data.errmsg, Json::Value());
-		}
-
 		return true;
 	}
 
 	if (msg[0] == commands.at(C_VIEW_CERT))
 	{
-		std::string cert = crypto.Get_SmartCard_RSAFull_certificate();
-
-		sendMessage(conn, msg[0] + "|CERT:" + cert.c_str(), Json::Value());
 		return true;
 	}
 
 	if (msg[0] == commands.at(C_AUTH))
 	{
-		std::ifstream t("mysite.local.cer");
-		std::string str((std::istreambuf_iterator<char>(t)),
-			std::istreambuf_iterator<char>());
-
-		sendMessage(conn, msg[0] + "|AUTH:" + str.c_str(), Json::Value());
 		return true;
 	}
 
 	if (msg[0] == commands.at(C_SIGN))
 	{
-		std::string strToSign = msg[1];
-
-		CRYPT_DATA_BLOB blobToSign;
-		blobToSign.cbData = strToSign.length();
-		blobToSign.pbData = (BYTE*)strToSign.c_str();
-
-		saveBlobToFile(&blobToSign, _T("toSign.txt"));
-
-		CRYPT_DATA_BLOB SignedMessage = { 0 };
-		CRYPT_DATA_BLOB Data = { 0 };
-		CRYPT_DATA_BLOB Signature64 = { 0 };
-
-		crypto.getBlobFromFile(&Data, _T("toSign.txt"));
-		//crypto.getBlobFromFile(&Data, _T("msg"));
-
-		if (crypto.SignMessage(&SignedMessage, &Data))
-		{
-			CRYPT_DATA_BLOB Signature = { 0 };
-			//CRYPT_DATA_BLOB DecodedMessage = { 0 };
-
-			if (crypto.GetSignature(&SignedMessage, &Signature))
-			{
-				saveBlobToFile(&Signature, "sig.bin");
-			}
-
-			if (binToBase64(&Signature, &Signature64))
-			{
-				saveBlobToFile(&Signature64, "sig64.txt");
-			}
-
-			//if (crypto.VerifySignedMessage(&SignedMessage, &DecodedMessage))
-			//{
-			//	free(DecodedMessage.pbData);
-			//}
-		}
-
-		freeBlob(&SignedMessage);
-		freeBlob(&Data);
-		freeBlob(&Signature64);
-
-		std::ifstream t("sig64.txt");
-		std::string str((std::istreambuf_iterator<char>(t)),
-			std::istreambuf_iterator<char>());
-
-		sendMessage(conn, msg[0] + "|SIGNED:" + str.c_str(), Json::Value());
 		return true;
 	}
 
