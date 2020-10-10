@@ -8,9 +8,6 @@
 #include <websocketpp/server.hpp>
 #include <json/json.h>
 
-#include <scd_pcsc.h>
-#include <scd_crypto.h>
-
 #include <functional>
 #include <string>
 #include <vector>
