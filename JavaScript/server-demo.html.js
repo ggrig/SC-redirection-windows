@@ -95,7 +95,7 @@
   function connect(atr)
   {  
     client = new SCD_SmcAuthClient('localhost',8080);
-    remote = new SCD_SmcAuthClient('sc_server.com',10522);
+    remote = new SCD_SmcAuthClient('sc_server.com',8080);
     
     client.onSmcError = function(e)
     {
