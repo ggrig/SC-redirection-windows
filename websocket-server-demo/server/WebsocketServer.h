@@ -21,6 +21,7 @@ using std::map;
 typedef websocketpp::server<websocketpp::config::asio> WebsocketEndpoint;
 typedef websocketpp::connection_hdl ClientConnection;
 typedef void(*callback_function)(std::string str); // type for conciseness
+typedef unsigned char       BYTE;
 
 class WebsocketServer
 {

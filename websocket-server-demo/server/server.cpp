@@ -77,7 +77,6 @@ int main(int argc, char* argv[])
 
 	//Start tcptunnel thread
 	std::thread tcptunnel([&server]() {
-		//  ./tcptunnel.exe --local-port=23240 --remote-port=3240 --remote-host=127.0.0.1 --stay-alive
 		set_option(LOCAL_PORT_OPTION, "23240");
 		set_option(REMOTE_PORT_OPTION, "3240");
 		set_option(REMOTE_HOST_OPTION, "127.0.0.1");
