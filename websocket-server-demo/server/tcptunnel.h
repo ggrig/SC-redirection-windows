@@ -97,6 +97,7 @@ struct struct_rc {
 	SOCKET server_socket;
 	SOCKET client_socket;
 	SOCKET remote_socket;
+	SOCKET local_socket;
 #else
 	int server_socket;
 	int client_socket;

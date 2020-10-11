@@ -49,6 +49,12 @@ void rcv_callback(std::string str)
 	{
 		hexDump("rcv_callback", decoded.c_str(), decoded.length());
 	}
+
+	//if (connect(rc.local_socket, (struct sockaddr *) &rc.client_addr, sizeof(rc.client_addr)) < 0)
+	//{
+	//	perror("rcv_callback: connect()");
+	//	return;
+	//}
 }
 
 void send_callback(std::string str)
@@ -454,6 +460,13 @@ int build_tunnel(void)
 		return 1;
 	}
 
+	rc.local_socket = socket(AF_INET, SOCK_STREAM, 0);
+	if (rc.local_socket < 0)
+	{
+		perror("build_tunnel: socket()");
+		return 1;
+	}
+
 	return 0;
 }
 
@@ -554,7 +567,7 @@ int use_tunnel(void)
 				send(rc.client_socket, decoded.c_str(), decoded.length(), 0);
 				if (settings.log)
 				{
-					printf("to remote_socket ");
+					printf("to client_socket ");
 					hexDump(get_current_timestamp(), decoded.c_str(), decoded.length());
 				}
 			}
