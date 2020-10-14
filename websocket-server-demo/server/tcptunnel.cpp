@@ -43,6 +43,12 @@ int stay_alive()
 
 void rcv_callback(std::string str)
 {
+	if (build_tunnel() != 0)
+	{
+		perror("rcv_callback build_tunnel failed");
+		return;
+	}
+
 	std::string decoded = base64_decode(str);
 	client_socket_data.Push(decoded);
 	if (settings.log)
@@ -50,11 +56,7 @@ void rcv_callback(std::string str)
 		hexDump("rcv_callback", decoded.c_str(), decoded.length());
 	}
 
-	//if (connect(rc.local_socket, (struct sockaddr *) &rc.client_addr, sizeof(rc.client_addr)) < 0)
-	//{
-	//	perror("rcv_callback: connect()");
-	//	return;
-	//}
+	use_tunnel();
 }
 
 void send_callback(std::string str)
@@ -428,7 +430,6 @@ void handle_tunnel(void)
 	{
 		use_tunnel();
 	}
-
 }
 
 int build_tunnel(void)
@@ -457,13 +458,6 @@ int build_tunnel(void)
 	if (connect(rc.remote_socket, (struct sockaddr *) &rc.remote_addr, sizeof(rc.remote_addr)) < 0)
 	{
 		perror("build_tunnel: connect()");
-		return 1;
-	}
-
-	rc.local_socket = socket(AF_INET, SOCK_STREAM, 0);
-	if (rc.local_socket < 0)
-	{
-		perror("build_tunnel: socket()");
 		return 1;
 	}
 
@@ -723,7 +717,7 @@ int tcptunnel_loop(WebsocketServer& server)
 	{
 		if (wait_for_clients() == 0)
 		{
-			handle_client();
+			//handle_client();
 		}
 	} while (settings.stay_alive);
 

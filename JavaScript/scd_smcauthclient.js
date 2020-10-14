@@ -133,7 +133,7 @@
     
     sendCommand(command) 
     {
-		console.log("Send Command: " + command);
+	   //console.log("Send Command: " + command);
        if (this.socket.readyState===1)
        {  
          this.socket.send(command);   
