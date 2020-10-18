@@ -476,11 +476,12 @@ int use_tunnel(void)
 	for (;;)
 	{
 		FD_ZERO(&io);
-		FD_SET(rc.client_socket, &io);
+		//FD_SET(rc.client_socket, &io);
 		FD_SET(rc.remote_socket, &io);
 
 		memset(buffer, 0, sizeof(buffer));
 
+#if 0
 #ifdef __MINGW32__
 		int select_value = select(fd(), &io, NULL, NULL, NULL);
 
@@ -492,6 +493,7 @@ int use_tunnel(void)
 			perror("use_tunnel: select()");
 			break;
 		}
+#endif
 
 
 		if (IS_WINDOWS_SERVER)
@@ -508,6 +510,7 @@ int use_tunnel(void)
 				}
 			}
 		}
+#if 0
 		else
 		if (FD_ISSET(rc.client_socket, &io))
 		{
@@ -567,6 +570,7 @@ int use_tunnel(void)
 			}
 		}
 		else
+#endif
 		if (FD_ISSET(rc.remote_socket, &io))
 		{
 			int count = recv(rc.remote_socket, buffer, sizeof(buffer), 0);
@@ -574,7 +578,7 @@ int use_tunnel(void)
 			{
 				perror("use_tunnel: recv(rc.remote_socket)");
 #ifdef __MINGW32__
-				closesocket(rc.client_socket);
+				//closesocket(rc.client_socket);
 				closesocket(rc.remote_socket);
 #else
 				close(rc.client_socket);
@@ -586,7 +590,7 @@ int use_tunnel(void)
 			if (count == 0)
 			{
 #ifdef __MINGW32__
-				closesocket(rc.client_socket);
+				//closesocket(rc.client_socket);
 				closesocket(rc.remote_socket);
 #else
 				close(rc.client_socket);
