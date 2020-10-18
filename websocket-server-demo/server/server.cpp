@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
 		set_option(REMOTE_PORT_OPTION, "3240");
 		set_option(REMOTE_HOST_OPTION, "127.0.0.1");
 		set_option(STAY_ALIVE_OPTION, "");
-		set_option(LOG_OPTION, "");
+		//set_option(LOG_OPTION, "");
 
 		tcptunnel_loop(server);
 	});

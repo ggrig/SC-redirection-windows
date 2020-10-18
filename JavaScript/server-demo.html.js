@@ -192,7 +192,7 @@
 
        //append("Command: " + e.detail.command + " => bin_data: " + e.detail.msg);
 
-       //console.log("BIN_DATA -> remote");
+       console.log("BIN_DATA -> remote: " + e.detail.msg);
        remote.sendCommand("BIN_DATA:" + e.detail.msg);
     };
 
@@ -219,7 +219,7 @@
 
        //append("Command: " + e.detail.command + " => bin_data: " + e.detail.msg);
 
-       //console.log("BIN_DATA -> local");
+       console.log("BIN_DATA -> local: " + e.detail.msg);
        client.sendCommand("BIN_DATA:" + e.detail.msg);
     };
 
