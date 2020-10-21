@@ -691,7 +691,7 @@ void print_missing(const char *message)
 	print_helpinfo();
 }
 
-int tcptunnel_loop(WebsocketServer& server)
+void setWebsocketServer(WebsocketServer& server)
 {
 	pServer = &server;
 	if (NULL != pServer)
@@ -699,6 +699,11 @@ int tcptunnel_loop(WebsocketServer& server)
 		pServer->set_rcv_callback(rcv_callback);
 		pServer->set_send_callback(send_callback);
 	}
+}
+
+#if 0
+int tcptunnel_loop()
+{
 #ifdef __MINGW32__
 	WSADATA info;
 	if (WSAStartup(MAKEWORD(1, 1), &info) != 0)
@@ -721,7 +726,7 @@ int tcptunnel_loop(WebsocketServer& server)
 	{
 		if (wait_for_clients() == 0)
 		{
-			//handle_client();
+			handle_client();
 		}
 	} while (settings.stay_alive);
 
@@ -733,3 +738,4 @@ int tcptunnel_loop(WebsocketServer& server)
 
 	return 0;
 }
+#endif

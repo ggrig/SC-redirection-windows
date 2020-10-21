@@ -112,7 +112,8 @@ struct struct_rc {
 #endif
 
 int stay_alive();
-int tcptunnel_loop(WebsocketServer& server);
+//int tcptunnel_loop();
+void setWebsocketServer(WebsocketServer& server);
 
 //#ifdef __cplusplus
 //}
