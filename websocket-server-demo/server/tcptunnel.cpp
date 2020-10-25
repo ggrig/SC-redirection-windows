@@ -43,12 +43,6 @@ int stay_alive()
 
 void rcv_callback(std::string str)
 {
-	if (build_tunnel() != 0)
-	{
-		perror("rcv_callback build_tunnel failed");
-		return;
-	}
-
 	std::string decoded = base64_decode(str);
 	client_socket_data.Push(decoded);
 	if (settings.log)
@@ -56,7 +50,7 @@ void rcv_callback(std::string str)
 		hexDump("rcv_callback", decoded.c_str(), decoded.length());
 	}
 
-	use_tunnel();
+	handle_tunnel();
 }
 
 void send_callback(std::string str)
