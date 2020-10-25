@@ -23,6 +23,12 @@
 #include "tcptunnel.h"
 #include "TMultiThreadSingleQueue.h"
 
+#include <iostream>
+#include <atomic>
+#include <condition_variable>
+#include <thread>
+#include <chrono>
+
 const char *name;
 
 struct struct_rc rc;
@@ -49,8 +55,6 @@ void rcv_callback(std::string str)
 	{
 		hexDump("rcv_callback", decoded.c_str(), decoded.length());
 	}
-
-	handle_tunnel();
 }
 
 void send_callback(std::string str)
@@ -354,6 +358,10 @@ int build_server(void)
 	return 0;
 }
 
+std::condition_variable cv;
+std::mutex cv_m;
+
+
 int wait_for_clients(void)
 {
 #if defined(__MINGW32__) || defined(__CYGWIN__)
@@ -364,15 +372,19 @@ int wait_for_clients(void)
 
 	client_addr_size = sizeof(struct sockaddr_in);
 
-	rc.client_socket = accept(rc.server_socket, (struct sockaddr *) &rc.client_addr, &client_addr_size);
-	if (rc.client_socket < 0)
-	{
-		if (errno != EINTR)
-		{
-			perror("wait_for_clients: accept()");
-		}
-		return 1;
-	}
+	std::unique_lock<std::mutex> lk(cv_m);
+	auto now = std::chrono::system_clock::now();
+	if (cv.wait_until(lk, now + std::chrono::milliseconds(1000), []() {return 1; })) {}
+
+	//rc.client_socket = accept(rc.server_socket, (struct sockaddr *) &rc.client_addr, &client_addr_size);
+	//if (rc.client_socket < 0)
+	//{
+	//	if (errno != EINTR)
+	//	{
+	//		perror("wait_for_clients: accept()");
+	//	}
+	//	return 1;
+	//}
 
 	if (settings.client_address && (strcmp(inet_ntoa(rc.client_addr.sin_addr), options.client_address) != 0))
 	{
@@ -424,10 +436,17 @@ void handle_tunnel(void)
 	{
 		use_tunnel();
 	}
+
 }
 
 int build_tunnel(void)
 {
+	if (client_socket_data.GetSize() <= 0)
+	{
+		//perror("build_tunnel: no client socket data");
+		return 1;
+	}
+
 	rc.remote_host = gethostbyname(options.remote_host);
 	if (rc.remote_host == NULL)
 	{
@@ -455,6 +474,18 @@ int build_tunnel(void)
 		return 1;
 	}
 
+	if (client_socket_data.GetSize() > 0)
+	{
+		std::string decoded;
+		client_socket_data.Pop(decoded);
+		send(rc.remote_socket, decoded.c_str(), decoded.length(), 0);
+		if (settings.log)
+		{
+			printf("to remote_socket ");
+			hexDump(get_current_timestamp(), decoded.c_str(), decoded.length());
+		}
+	}
+
 	return 0;
 }
 
@@ -469,15 +500,15 @@ int use_tunnel(void)
 
 	for (;;)
 	{
+		struct timeval tv = { 1, 0 };
 		FD_ZERO(&io);
 		//FD_SET(rc.client_socket, &io);
 		FD_SET(rc.remote_socket, &io);
 
 		memset(buffer, 0, sizeof(buffer));
 
-#if 0
 #ifdef __MINGW32__
-		int select_value = select(fd(), &io, NULL, NULL, NULL);
+		int select_value = select(0, &io, NULL, NULL, &tv);
 
 		if (select_value == 0 || select_value >= WSABASEERR)
 #else
@@ -487,9 +518,8 @@ int use_tunnel(void)
 			perror("use_tunnel: select()");
 			break;
 		}
-#endif
 
-
+#if 0
 		if (IS_WINDOWS_SERVER)
 		{
 			if (client_socket_data.GetSize() > 0)
@@ -504,7 +534,6 @@ int use_tunnel(void)
 				}
 			}
 		}
-#if 0
 		else
 		if (FD_ISSET(rc.client_socket, &io))
 		{
@@ -572,7 +601,7 @@ int use_tunnel(void)
 			{
 				perror("use_tunnel: recv(rc.remote_socket)");
 #ifdef __MINGW32__
-				//closesocket(rc.client_socket);
+				closesocket(rc.client_socket);
 				closesocket(rc.remote_socket);
 #else
 				close(rc.client_socket);
@@ -584,7 +613,7 @@ int use_tunnel(void)
 			if (count == 0)
 			{
 #ifdef __MINGW32__
-				//closesocket(rc.client_socket);
+				closesocket(rc.client_socket);
 				closesocket(rc.remote_socket);
 #else
 				close(rc.client_socket);
@@ -685,7 +714,7 @@ void print_missing(const char *message)
 	print_helpinfo();
 }
 
-void setWebsocketServer(WebsocketServer& server)
+int tcptunnel_loop(WebsocketServer& server)
 {
 	pServer = &server;
 	if (NULL != pServer)
@@ -693,11 +722,6 @@ void setWebsocketServer(WebsocketServer& server)
 		pServer->set_rcv_callback(rcv_callback);
 		pServer->set_send_callback(send_callback);
 	}
-}
-
-#if 0
-int tcptunnel_loop()
-{
 #ifdef __MINGW32__
 	WSADATA info;
 	if (WSAStartup(MAKEWORD(1, 1), &info) != 0)
@@ -732,4 +756,3 @@ int tcptunnel_loop()
 
 	return 0;
 }
-#endif
