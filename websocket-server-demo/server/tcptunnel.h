@@ -46,7 +46,6 @@
 
 #define OPTIONS_BUFFER_SIZE 4096
 
-int build_server(void);
 int wait_for_clients(void);
 void handle_client(void);
 void handle_tunnel(void);
@@ -93,15 +92,7 @@ struct struct_options {
 };
 
 struct struct_rc {
-#ifdef __MINGW32__
-	SOCKET server_socket;
 	SOCKET remote_socket;
-#else
-	int server_socket;
-	int remote_socket;
-#endif
-
-	struct sockaddr_in server_addr;
 	struct sockaddr_in remote_addr;
 	struct hostent *remote_host;
 };

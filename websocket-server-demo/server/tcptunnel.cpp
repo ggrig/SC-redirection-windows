@@ -127,52 +127,6 @@ void set_option(char option, const char *optarg)
 	}
 }
 
-int build_server(void)
-{
-	memset(&rc.server_addr, 0, sizeof(rc.server_addr));
-
-	rc.server_addr.sin_port = htons(atoi(options.local_port));
-	rc.server_addr.sin_family = AF_INET;
-	rc.server_addr.sin_addr.s_addr = INADDR_ANY;
-
-	rc.server_socket = socket(AF_INET, SOCK_STREAM, 0);
-	if (rc.server_socket < 0)
-	{
-		perror("build_server: socket()");
-		return 1;
-	}
-	
-	int optval = 1;
-#ifdef __MINGW32__
-	if (setsockopt(rc.server_socket, SOL_SOCKET, SO_REUSEADDR, (const char *) &optval, sizeof(optval)) < 0)
-#else
-	if (setsockopt(rc.server_socket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0)
-#endif
-	{
-		perror("build_server: setsockopt(SO_REUSEADDR)");
-		return 1;
-	}
-
-	if (settings.bind_address)
-	{
-		rc.server_addr.sin_addr.s_addr = inet_addr(options.bind_address);
-	}
-
-	if (bind(rc.server_socket, (struct sockaddr *) &rc.server_addr, sizeof(rc.server_addr)) < 0)
-	{
-		perror("build_server: bind()");
-		return 1;
-	}
-
-	if (listen(rc.server_socket, 1) < 0)
-	{
-		perror("build_server: listen()");
-		return 1;
-	}
-
-	return 0;
-}
-
 std::condition_variable cv;
 std::mutex cv_m;
 
@@ -392,11 +346,6 @@ int tcptunnel_loop(WebsocketServer& server)
 	}
 #endif
 
-	if (build_server() == 1)
-	{
-		exit(1);
-	}
-
 #ifndef __MINGW32__
 	signal(SIGCHLD, SIG_IGN);
 #endif
@@ -408,12 +357,6 @@ int tcptunnel_loop(WebsocketServer& server)
 			handle_client();
 		}
 	} while (settings.stay_alive);
-
-#ifdef __MINGW32__
-	closesocket(rc.server_socket);
-#else
-	close(rc.server_socket);
-#endif
 
 	return 0;
 }
