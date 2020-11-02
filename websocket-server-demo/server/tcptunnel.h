@@ -95,11 +95,11 @@ struct struct_options {
 struct struct_rc {
 #ifdef __MINGW32__
 	SOCKET server_socket;
-	SOCKET client_socket;
+	//SOCKET client_socket;
 	SOCKET remote_socket;
 #else
 	int server_socket;
-	int client_socket;
+	//int client_socket;
 	int remote_socket;
 #endif
 

@@ -386,19 +386,19 @@ int wait_for_clients(void)
 	//	return 1;
 	//}
 
-	if (settings.client_address && (strcmp(inet_ntoa(rc.client_addr.sin_addr), options.client_address) != 0))
-	{
-		if (settings.log)
-		{
-			printf("> %s tcptunnel: refused request from %s\n", get_current_timestamp(), inet_ntoa(rc.client_addr.sin_addr));
-		}
-#ifdef __MINGW32__
-		closesocket(rc.client_socket);
-#else
-		close(rc.client_socket);
-#endif
-		return 1;
-	}
+//	if (settings.client_address && (strcmp(inet_ntoa(rc.client_addr.sin_addr), options.client_address) != 0))
+//	{
+//		if (settings.log)
+//		{
+//			printf("> %s tcptunnel: refused request from %s\n", get_current_timestamp(), inet_ntoa(rc.client_addr.sin_addr));
+//		}
+//#ifdef __MINGW32__
+//		closesocket(rc.client_socket);
+//#else
+//		close(rc.client_socket);
+//#endif
+//		return 1;
+//	}
 
 	if (settings.log)
 	{
@@ -410,24 +410,7 @@ int wait_for_clients(void)
 
 void handle_client(void)
 {
-#ifdef __MINGW32__
 	handle_tunnel();
-#else
-	if (settings.fork)
-	{
-		if (fork() == 0)
-		{
-			close(rc.server_socket);
-			handle_tunnel();
-			exit(0);
-		}
-		close(rc.client_socket);
-	}
-	else
-	{
-		handle_tunnel();
-	}
-#endif
 }
 
 void handle_tunnel(void)
@@ -436,7 +419,6 @@ void handle_tunnel(void)
 	{
 		use_tunnel();
 	}
-
 }
 
 int build_tunnel(void)
@@ -502,7 +484,6 @@ int use_tunnel(void)
 
 		struct timeval tv = { 1, 0 };
 		FD_ZERO(&io);
-		//FD_SET(rc.client_socket, &io);
 		FD_SET(rc.remote_socket, &io);
 
 		memset(buffer, 0, sizeof(buffer));
@@ -519,91 +500,21 @@ int use_tunnel(void)
 			continue;
 		}
 
-#if 0
-		if (FD_ISSET(rc.client_socket, &io))
-		{
-			int count = recv(rc.client_socket, buffer, sizeof(buffer), 0);
-			if (count < 0)
-			{
-				perror("use_tunnel: recv(rc.client_socket)");
-#ifdef __MINGW32__
-				closesocket(rc.client_socket);
-				closesocket(rc.remote_socket);
-#else
-				close(rc.client_socket);
-				close(rc.remote_socket);
-#endif
-				return 1;
-			}
-
-			if (count == 0)
-			{
-#ifdef __MINGW32__
-				closesocket(rc.client_socket);
-				closesocket(rc.remote_socket);
-#else
-				close(rc.client_socket);
-				close(rc.remote_socket);
-#endif
-				return 0;
-			}
-
-			//send(rc.remote_socket, buffer, count, 0);
-
-			if (settings.log)
-			{
-				printf("to remote_socket ");
-				hexDump(get_current_timestamp(), buffer, count);
-			}
-
-			if (NULL != pServer && pServer->isLinuxSide())
-			{
-				std::string encodedData = base64_encode((const unsigned char *)buffer, count);
-				pServer->broadcastMessage("BIN_DATA|" + encodedData, Json::Value());
-			}
-		}
-
-		if (IS_LINUX_SERVER)
-		{
-			if (remote_socket_data.GetSize() > 0)
-			{
-				std::string decoded;
-				remote_socket_data.Pop(decoded);
-				send(rc.client_socket, decoded.c_str(), decoded.length(), 0);
-				if (settings.log)
-				{
-					printf("to client_socket ");
-					hexDump(get_current_timestamp(), decoded.c_str(), decoded.length());
-				}
-			}
-		}
-		else
-#endif
 		if (FD_ISSET(rc.remote_socket, &io))
 		{
 			int count = recv(rc.remote_socket, buffer, sizeof(buffer), 0);
 			if (count < 0)
 			{
 				perror("use_tunnel: recv(rc.remote_socket)");
-#ifdef __MINGW32__
-				closesocket(rc.client_socket);
+				//closesocket(rc.client_socket);
 				closesocket(rc.remote_socket);
-#else
-				close(rc.client_socket);
-				close(rc.remote_socket);
-#endif
 				return 1;
 			}
 
 			if (count == 0)
 			{
-#ifdef __MINGW32__
-				closesocket(rc.client_socket);
+				//closesocket(rc.client_socket);
 				closesocket(rc.remote_socket);
-#else
-				close(rc.client_socket);
-				close(rc.remote_socket);
-#endif
 				return 0;
 			}
 
@@ -628,16 +539,7 @@ int use_tunnel(void)
 
 int fd(void)
 {
-#ifndef __MINGW32__
-	unsigned int fd = rc.client_socket;
-	if (fd < rc.remote_socket)
-	{
-		fd = rc.remote_socket;
-	}
-	return fd + 1;
-#else
 	return 0;
-#endif
 }
 
 char *get_current_timestamp(void)
