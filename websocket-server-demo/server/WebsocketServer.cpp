@@ -203,12 +203,6 @@ void split(const string& s, char c,
 bool WebsocketServer::messageParse(ClientConnection conn, string message)
 {
 	string code;
-	int err;
-
-	// convert string to upper case
-	//std::for_each(message.begin(), message.end(), [](char & c) {
-	//	c = ::toupper(c);
-	//});
 
 	vector<string> msg;
 
