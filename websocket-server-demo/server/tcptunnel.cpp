@@ -55,6 +55,7 @@ void rcv_callback(std::string str)
 	{
 		hexDump("rcv_callback", decoded.c_str(), decoded.length());
 	}
+	//cv.notify_all();
 }
 
 void send_callback(std::string str)
@@ -130,14 +131,16 @@ void set_option(char option, const char *optarg)
 std::condition_variable cv;
 std::mutex cv_m;
 
-
 int wait_for_clients(void)
 {
 	std::unique_lock<std::mutex> lk(cv_m);
 	auto now = std::chrono::system_clock::now();
-	if (cv.wait_until(lk, now + std::chrono::milliseconds(1000), []() {return 1; })) {}
+	if (cv.wait_until(lk, now + std::chrono::milliseconds(1), []() {return (client_socket_data.GetSize() > 0); }))
+	{
+		return 0;
+	}
 
-	return 0;
+	return 1;
 }
 
 void handle_client(void)
