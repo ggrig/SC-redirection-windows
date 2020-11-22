@@ -194,7 +194,7 @@ int build_tunnel(void)
 	return 0;
 }
 
-#define NODATA_TIMEOUT 16
+#define NODATA_TIMEOUT 4
 
 int use_tunnel(void)
 {
