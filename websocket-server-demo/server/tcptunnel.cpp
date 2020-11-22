@@ -191,6 +191,8 @@ int build_tunnel(void)
 	return 0;
 }
 
+#define NODATA_TIMEOUT 16
+
 int use_tunnel(void)
 {
 	fd_set io;
@@ -200,9 +202,12 @@ int use_tunnel(void)
 	char buffer[options.buffer_size];
 #endif
 
+	int nodata = 0;
+
 	for (;;)
 	{
-		if (client_socket_data.GetSize() > 0)
+		bool client_data = (client_socket_data.GetSize() > 0);
+		if (client_data)
 		{
 			std::string decoded;
 			client_socket_data.Pop(decoded);
@@ -220,17 +225,28 @@ int use_tunnel(void)
 
 		memset(buffer, 0, sizeof(buffer));
 
-#ifdef __MINGW32__
 		int select_value = select(0, &io, NULL, NULL, &tv);
 
 		if (select_value == 0 || select_value >= WSABASEERR)
-#else
-		if (select(fd(), &io, NULL, NULL, NULL) < 0)
-#endif
 		{
-			perror("use_tunnel: select()");
+			if (client_data)
+			{
+				nodata = 0;
+				continue;
+			}
+
+			nodata++;
+			if (nodata >= NODATA_TIMEOUT)
+			{
+				perror("use_tunnel: remote_socket timed out");
+				closesocket(rc.remote_socket);
+				return 0;
+			}
+
 			continue;
 		}
+
+		nodata = 0;
 
 		if (FD_ISSET(rc.remote_socket, &io))
 		{
@@ -244,6 +260,7 @@ int use_tunnel(void)
 
 			if (count == 0)
 			{
+				printf("use_tunnel: remote_socket closed");
 				closesocket(rc.remote_socket);
 				return 0;
 			}
